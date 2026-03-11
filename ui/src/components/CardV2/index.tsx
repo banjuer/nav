@@ -1,7 +1,10 @@
-import { useMemo } from "react";
+import { useMemo, useState, useEffect, useRef } from "react";
 import clsx from "clsx";
 import { getJumpTarget } from "../../utils/setting";
 import { ToolLogo } from "../ToolLogo";
+import { Modal } from "../ui/Modal";
+import { Button } from "../ui/Button";
+import { Input } from "../ui/Input";
 
 interface CardProps {
   title: string;
@@ -15,43 +18,156 @@ interface CardProps {
 }
 
 const Card = ({ title, url, des, logo, catelog, onClick, index, isSearching }: CardProps) => {
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [variables, setVariables] = useState<Record<string, string>>({});
+  const [variableFields, setVariableFields] = useState<string[]>([]);
+  const firstInputRef = useRef<HTMLInputElement | null>(null);
 
   const showNumIndex = index < 10 && isSearching;
 
+  // 检测URL中的变量，格式为 {variable}
+  const extractVariables = (url: string): string[] => {
+    const regex = /\{([^}]+)\}/g;
+    const matches = [];
+    let match;
+    while ((match = regex.exec(url)) !== null) {
+      matches.push(match[1]);
+    }
+    return matches;
+  };
+
+  const handleCardClick = (e: React.MouseEvent<HTMLAnchorElement, MouseEvent>) => {
+    if (url === "toggleJumpTarget") {
+      onClick();
+      e.preventDefault();
+      return;
+    }
+
+    const variables = extractVariables(url);
+    if (variables.length > 0) {
+      e.preventDefault();
+      setVariableFields(variables);
+      setVariables({});
+      setIsModalOpen(true);
+    } else {
+      onClick();
+    }
+  };
+
+  const handleVariableChange = (variable: string, value: string) => {
+    setVariables(prev => ({
+      ...prev,
+      [variable]: value
+    }));
+  };
+
+  const handleSubmit = () => {
+    // 检查所有变量是否都已填写
+    const allFilled = variableFields.every(field => variables[field] !== undefined && variables[field] !== "");
+    if (!allFilled) return;
+
+    // 替换URL中的变量
+    let finalUrl = url;
+    variableFields.forEach(field => {
+      finalUrl = finalUrl.replace(new RegExp(`\\{${field}\\}`, "g"), variables[field]);
+    });
+
+    // 打开新链接
+    window.open(finalUrl, getJumpTarget() === "blank" ? "_blank" : "_self");
+    setIsModalOpen(false);
+    onClick();
+  };
+
+  // 当弹窗打开时，聚焦到第一个输入框
+  useEffect(() => {
+    if (isModalOpen) {
+      // 使用setTimeout确保DOM已经渲染完成
+      const timer = setTimeout(() => {
+        if (firstInputRef.current) {
+          firstInputRef.current.focus();
+        }
+      }, 100);
+      return () => clearTimeout(timer);
+    }
+  }, [isModalOpen, variableFields]);
+
+  // 处理键盘事件，支持Enter键跳转
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      handleSubmit();
+    }
+  };
+
   return (
-    <a
-      href={url === "toggleJumpTarget" ? undefined : url}
-      onClick={onClick}
-      target={getJumpTarget() === "blank" ? "_blank" : "_self"}
-      rel="noreferrer"
-      className={clsx("van-card", styles.container)}
-    >
-      {showNumIndex && (
-        <span className={clsx("van-card-index", styles.index)}>
-          {index + 1}
-        </span>
-      )}
+    <>
+      <a
+        href={url === "toggleJumpTarget" ? undefined : url}
+        onClick={handleCardClick}
+        target={getJumpTarget() === "blank" ? "_blank" : "_self"}
+        rel="noreferrer"
+        className={clsx("van-card", styles.container)}
+      >
+        {showNumIndex && (
+          <span className={clsx("van-card-index", styles.index)}>
+            {index + 1}
+          </span>
+        )}
 
-      <div className={clsx("van-card-icon", styles.iconWrapper)}>
-        <ToolLogo logo={logo} name={title} url={url} className="h-full w-full text-xl" />
-      </div>
-
-      <div className={clsx("van-card-content", styles.content)}>
-        <div className={clsx("van-card-header", styles.header)}>
-          <h3 className={clsx("van-card-title", styles.title)} title={title}>
-            {title}
-          </h3>
-          {catelog && (
-            <span className={clsx("van-card-catelog", styles.catelog)}>
-              {catelog}
-            </span>
-          )}
+        <div className={clsx("van-card-icon", styles.iconWrapper)}>
+          <ToolLogo logo={logo} name={title} url={url} className="h-full w-full text-xl" />
         </div>
-        <p className={clsx("van-card-desc", styles.desc)} title={des}>
-          {des}
-        </p>
-      </div>
-    </a>
+
+        <div className={clsx("van-card-content", styles.content)}>
+          <div className={clsx("van-card-header", styles.header)}>
+            <h3 className={clsx("van-card-title", styles.title)} title={title}>
+              {title}
+            </h3>
+            {catelog && (
+              <span className={clsx("van-card-catelog", styles.catelog)}>
+                {catelog}
+              </span>
+            )}
+          </div>
+          <p className={clsx("van-card-desc", styles.desc)} title={des}>
+            {des}
+          </p>
+        </div>
+      </a>
+
+      <Modal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        title={`填写 ${title} 的变量`}
+        footer={
+          <>
+            <Button onClick={() => setIsModalOpen(false)} variant="secondary">
+              取消
+            </Button>
+            <Button onClick={handleSubmit}>
+              确认
+            </Button>
+          </>
+        }
+      >
+        <div className="space-y-4" onKeyDown={handleKeyDown}>
+          {variableFields.map((variable, index) => (
+            <div key={variable} className="flex items-center space-x-2">
+              <label className="text-sm font-medium text-gray-700 dark:text-gray-300 min-w-[80px]">
+                {variable}:
+              </label>
+              <Input
+                type="text"
+                value={variables[variable] || ""}
+                onChange={(e) => handleVariableChange(variable, e.target.value)}
+                placeholder={`请输入 ${variable}`}
+                className="flex-1"
+                ref={index === 0 ? firstInputRef : undefined}
+              />
+            </div>
+          ))}
+        </div>
+      </Modal>
+    </>
   );
 };
 

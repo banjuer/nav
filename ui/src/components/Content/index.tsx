@@ -188,8 +188,26 @@ const Content = (props: any) => {
     const cards = filteredDataRef.current;
     if (ev.keyCode === 13) {
       if (cards && cards.length) {
-        window.open(cards[0]?.url, "_blank");
-        resetSearch();
+        const url = cards[0]?.url;
+        // 检测URL中的变量，格式为 {variable}
+        const extractVariables = (url: string): string[] => {
+          const regex = /\{([^}]+)\}/g;
+          const matches = [];
+          let match;
+          while ((match = regex.exec(url)) !== null) {
+            matches.push(match[1]);
+          }
+          return matches;
+        };
+        
+        const variables = extractVariables(url);
+        if (variables.length > 0) {
+          // 如果有变量，不通过键盘导航直接打开，让用户通过点击卡片来输入变量
+          return;
+        } else {
+          window.open(url, "_blank");
+          resetSearch();
+        }
       }
     }
     if (ev.ctrlKey || ev.metaKey) {
@@ -198,8 +216,26 @@ const Content = (props: any) => {
       ev.preventDefault()
       const index = Number(ev.key) - 1;
       if (index >= 0 && index < cards.length) {
-        window.open(cards[index]?.url, "_blank");
-        resetSearch();
+        const url = cards[index]?.url;
+        // 检测URL中的变量，格式为 {variable}
+        const extractVariables = (url: string): string[] => {
+          const regex = /\{([^}]+)\}/g;
+          const matches = [];
+          let match;
+          while ((match = regex.exec(url)) !== null) {
+            matches.push(match[1]);
+          }
+          return matches;
+        };
+        
+        const variables = extractVariables(url);
+        if (variables.length > 0) {
+          // 如果有变量，不通过键盘导航直接打开，让用户通过点击卡片来输入变量
+          return;
+        } else {
+          window.open(url, "_blank");
+          resetSearch();
+        }
       }
     }
   }, []);
