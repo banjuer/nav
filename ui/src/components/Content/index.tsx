@@ -255,6 +255,7 @@ const Content = (props: any) => {
     return filteredData.map((item, index) => {
       return (
         <CardV2
+          id={item.id}
           title={item.name}
           url={item.url}
           des={item.desc}
@@ -263,6 +264,8 @@ const Content = (props: any) => {
           catelog={item.catelog}
           index={index}
           isSearching={searchString.trim() !== ""}
+          catelogs={data?.catelogs || []}
+          onRefresh={loadData}
           onClick={() => {
             resetSearch();
             if (item.url === "toggleJumpTarget") {
