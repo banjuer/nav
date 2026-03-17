@@ -74,11 +74,15 @@ const AddToolButton = ({ catelogs, onSuccess, showGithub }: AddToolButtonProps) 
   }, []);
 
   // 计算底部位置
+  // 从下到上: GithubLink -> DarkSwitch -> AddToolButton
+  // 各按钮高度约 40px，间距 12px
   const bottomPosition = useMemo(() => {
     if (showGithub) {
-      return "bottom-[88px] md:bottom-[108px]"; // Github + DarkSwitch + 间距
+      // GithubLink (40px) + 间距(12px) + DarkSwitch (40px) + 间距(12px) = 104px
+      return "bottom-[104px] md:bottom-[120px]";
     }
-    return "bottom-[52px] md:bottom-[68px]"; // DarkSwitch + 间距
+    // DarkSwitch (40px) + 间距(12px) = 52px -> 使用 56px 增加一些空间
+    return "bottom-[56px] md:bottom-[72px]";
   }, [showGithub]);
 
   const categoryOptions = useMemo(() => {
@@ -175,7 +179,7 @@ const AddToolButton = ({ catelogs, onSuccess, showGithub }: AddToolButtonProps) 
       {/* 浮动按钮 */}
       <div
         className={clsx(
-          "fixed right-3 z-50 flex h-10 w-10 cursor-pointer items-center justify-center rounded-full bg-white/80 shadow-sm backdrop-blur transition-all hover:bg-white hover:shadow-md dark:bg-gray-800/80 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-gray-200",
+          "fixed right-3 z-[60] flex h-10 w-10 cursor-pointer items-center justify-center rounded-full bg-white/80 shadow-sm backdrop-blur transition-all hover:bg-white hover:shadow-md dark:bg-gray-800/80 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-gray-200",
           bottomPosition
         )}
         onClick={handleOpen}
