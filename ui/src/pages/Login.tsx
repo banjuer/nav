@@ -21,6 +21,8 @@ const Login: React.FC = () => {
       const response = await login(username, password);
       if (response.success) {
         localStorage.setItem('_token', response.data.token);
+        // 触发自定义事件通知登录状态变化
+        window.dispatchEvent(new CustomEvent('auth-change'));
         navigate('/admin');
       } else {
         setError(response.message || '登录失败，请检查用户名或密码');
@@ -85,7 +87,7 @@ const Login: React.FC = () => {
         </form>
 
         <div className="flex justify-center">
-          <a href="https://github.com/van579/nav" target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-gray-500 flex items-center gap-2 transition-colors">
+          <a href="https://github.com/banjuer/nav" target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-gray-500 flex items-center gap-2 transition-colors">
             <svg
               height="20"
               width="20"

@@ -10,6 +10,7 @@ import TagSelector from "../TagSelector";
 import pinyin from "pinyin-match";
 import GithubLink from "../GithubLink";
 import DarkSwitch from "../DarkSwitch";
+import AddToolButton from "../AddToolButton";
 
 import { toggleJumpTarget } from "../../utils/setting";
 import LockScreen from "../LockScreen";
@@ -344,6 +345,11 @@ const Content = (props: any) => {
 
       {showGithub && <GithubLink />}
       <DarkSwitch showGithub={showGithub} />
+      <AddToolButton 
+        catelogs={data?.catelogs || []} 
+        onSuccess={loadData}
+        showGithub={showGithub}
+      />
     </div>
   );
 };

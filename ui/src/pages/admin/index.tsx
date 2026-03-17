@@ -63,6 +63,8 @@ export const AdminPage = () => {
   // 处理退出登录
   const handleLogout = () => {
     localStorage.removeItem('_token');
+    // 触发自定义事件通知登录状态变化
+    window.dispatchEvent(new CustomEvent('auth-change'));
     navigate('/');
   };
 
