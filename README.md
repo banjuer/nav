@@ -1,5 +1,11 @@
 # Nav
 
+---
+本项目主要修改的点：
+1. 书签支持定义变量
+2. 登录后可直接编辑书签
+---
+
 一个轻量的导航站，原开发者不怎么维护了，魔改私用。  
 [源库地址](https://github.com/Mereithhh/van-nav)  
 以下为原仓库内容，等有时间再更新
@@ -50,7 +56,7 @@
 ### Docker
 
 ```
-docker run -d --name tools --restart always -p 6412:6412 -v /path/to/your/data:/app/data 1i1i/nav:latest
+docker run -d --name tools --restart always -p 6412:6412 -v /path/to/your/data:/app/data banjuer/nav:latest
 ```
 
 打开浏览器 [http://localhost:6412](http://localhost:6412) 即可访问。
