@@ -63,12 +63,9 @@ jobs:
             ${{ steps.meta.outputs.ghcr_image }}:v${{ steps.meta.outputs.version }}
             ${{ steps.meta.outputs.ghcr_image }}:latest
 
-      - name: Verify images
-        run: |
-          echo "=== Verifying DockerHub image ==="
-          docker pull ${{ steps.meta.outputs.dockerhub_image }}:v${{ steps.meta.outputs.version }}
-          docker run --rm ${{ steps.meta.outputs.dockerhub_image }}:v${{ steps.meta.outputs.version }} ls -lh /app/nav
-          echo ""
-          echo "=== Verifying GHCR image ==="
-          docker pull ${{ steps.meta.outputs.ghcr_image }}:v${{ steps.meta.outputs.version }}
-          docker run --rm ${{ steps.meta.outputs.ghcr_image }}:v${{ steps.meta.outputs.version }} ls -lh /app/nav
+      # 可选：验证镜像（如果遇到同步延迟问题可以注释掉）
+      # - name: Verify images
+      #   run: |
+      #     sleep 10
+      #     docker pull ${{ steps.meta.outputs.dockerhub_image }}:v${{ steps.meta.outputs.version }}
+      #     docker run --rm ${{ steps.meta.outputs.dockerhub_image }}:v${{ steps.meta.outputs.version }} ls -lh /app/nav
