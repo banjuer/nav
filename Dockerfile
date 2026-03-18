@@ -1,38 +1,53 @@
 FROM node:24-alpine AS frontendbuilder
 WORKDIR /app
-# 添加缓存失效标记 - 必须放在 COPY 之前才能生效
+# 添加缓存失效标记
 ARG CACHE_BUSTER=1
 COPY . .
 RUN npm install -g pnpm
-# 使用 --force 确保重新安装依赖，避免缓存问题
-RUN cd /app/ui && pnpm install --force && CI=false pnpm build && cd ..
-# 验证前端构建输出
-RUN echo "=== Frontend build output ===" && \
+
+# 前端构建 - 关键步骤
+RUN echo "=== Starting frontend build ===" && \
+    cd /app/ui && \
+    pnpm install --force && \
+    CI=false pnpm build && \
+    cd .. && \
+    echo "=== Frontend build completed ===" && \
     ls -la /app/ui/build/ && \
-    echo "=== index.html content ===" && \
-    cat /app/ui/build/index.html | head -10 && \
-    echo "=== Check for specific file (Home-*.js) ===" && \
-    ls -la /app/ui/build/assets/ | grep -E "Home|ContextMenu" | head -5
+    echo "=== index.html first 20 lines ===" && \
+    head -20 /app/ui/build/index.html
 
 FROM golang:1.25-alpine AS binarybuilder
 RUN apk --no-cache --no-progress add git
 WORKDIR /app
-# 清理 Go 缓存，确保重新构建
-RUN go clean -cache -modcache -testcache
-COPY --from=frontendbuilder /app/ /app/
-# 验证嵌入文件存在
-RUN echo "=== Files copied to binarybuilder ===" && \
+
+# 关键：复制前端构建结果
+COPY --from=frontendbuilder /app/ui/build /app/ui/build
+COPY --from=frontendbuilder /app/main.go /app/
+COPY --from=frontendbuilder /app/serve.go /app/
+COPY --from=frontendbuilder /app/go.mod /app/
+COPY --from=frontendbuilder /app/go.sum /app/
+COPY --from=frontendbuilder /app/utils /app/utils
+COPY --from=frontendbuilder /app/handler /app/handler
+COPY --from=frontendbuilder /app/middleware /app/middleware
+COPY --from=frontendbuilder /app/database /app/database
+COPY --from=frontendbuilder /app/logger /app/logger
+COPY --from=frontendbuilder /app/types /app/types
+COPY --from=frontendbuilder /app/service /app/service
+COPY --from=frontendbuilder /app/goscraper /app/goscraper
+
+# 验证文件
+RUN echo "=== Files before Go build ===" && \
     ls -la /app/ui/build/ && \
-    echo "=== Home.js content check ===" && \
-    ls -la /app/ui/build/assets/ | grep -i home && \
-    echo "=== main.go embed path check ===" && \
-    grep -A2 "go:embed" /app/main.go
-# 强制重新构建，不使用缓存
-RUN cd /app && go mod tidy && go build -a -v -o nav .
-# 验证二进制文件包含嵌入文件（通过检查大小）
-RUN echo "=== Final binary size ===" && \
-    ls -lh /app/nav && \
-    echo "=== Binary should be > 10MB if frontend is embedded ==="
+    ls -la /app/*.go && \
+    echo "=== main.go embed directive ===" && \
+    grep -A1 "go:embed" /app/main.go
+
+# Go 构建
+RUN cd /app && \
+    go mod tidy && \
+    go build -v -o nav . && \
+    echo "=== Binary built ===" && \
+    ls -lh /app/nav
 
 FROM alpine:latest
 ENV TZ="Asia/Shanghai"
@@ -43,7 +58,6 @@ RUN apk --no-cache --no-progress add \
     echo "$TZ" > /etc/timezone
 WORKDIR /app
 COPY --from=binarybuilder /app/nav /app/
-# 验证最终镜像中的二进制
 RUN ls -lh /app/nav
 
 VOLUME ["/app/data"]
