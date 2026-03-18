@@ -44,6 +44,9 @@ jobs:
           file: ./Dockerfile
           platforms: linux/amd64,linux/arm64
           push: true
+          # 使用基于时间的缓存失效标记，确保前端重新构建
+          build-args: |
+            CACHE_BUSTER=${{ github.sha }}-${{ github.run_id }}
           cache-from: type=registry,ref=banjuer/nav:buildcache
           cache-to: type=registry,ref=banjuer/nav:buildcache,mode=max
           tags: |

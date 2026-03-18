@@ -1,8 +1,11 @@
 FROM node:24-alpine AS frontendbuilder
 WORKDIR /app
+# 添加缓存失效标记 - 每次构建时修改这个值可以强制重新构建前端
+ARG CACHE_BUSTER=1
 COPY . .
 RUN npm install -g pnpm
-RUN cd /app/ui && pnpm install   && CI=false pnpm build && cd ..
+# 使用 --force 确保重新安装依赖，避免缓存问题
+RUN cd /app/ui && pnpm install --force && CI=false pnpm build && cd ..
 
 FROM golang:1.25-alpine AS binarybuilder
 RUN apk --no-cache --no-progress add  git
