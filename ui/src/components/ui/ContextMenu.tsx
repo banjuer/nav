@@ -19,7 +19,7 @@ interface ContextMenuProps {
 
 export function ContextMenu({ isOpen, onClose, position, items }: ContextMenuProps) {
   const menuRef = useRef<HTMLDivElement>(null);
-  const [adjustedPosition, setAdjustedPosition] = useState(position);
+  const [adjustedPosition, setAdjustedPosition] = useState<{ x: number; y: number } | null>(null);
 
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
@@ -46,30 +46,48 @@ export function ContextMenu({ isOpen, onClose, position, items }: ContextMenuPro
   }, [isOpen, onClose]);
 
   useEffect(() => {
-    if (isOpen && menuRef.current) {
-      const menu = menuRef.current;
-      const rect = menu.getBoundingClientRect();
-      const padding = 8;
+    if (isOpen) {
+      // 计算调整后的位置，确保菜单不超出视口
+      const calculatePosition = () => {
+        if (!menuRef.current) {
+          // 如果 ref 还没准备好，使用传入的位置
+          setAdjustedPosition(position);
+          return;
+        }
 
-      let x = position.x;
-      let y = position.y;
+        const menu = menuRef.current;
+        const rect = menu.getBoundingClientRect();
+        const padding = 8;
 
-      if (x + rect.width + padding > window.innerWidth) {
-        x = window.innerWidth - rect.width - padding;
-      }
+        let x = position.x;
+        let y = position.y;
 
-      if (y + rect.height + padding > window.innerHeight) {
-        y = window.innerHeight - rect.height - padding;
-      }
+        // 水平边界检查
+        if (x + rect.width + padding > window.innerWidth) {
+          x = window.innerWidth - rect.width - padding;
+        }
 
-      x = Math.max(padding, x);
-      y = Math.max(padding, y);
+        // 垂直边界检查
+        if (y + rect.height + padding > window.innerHeight) {
+          y = window.innerHeight - rect.height - padding;
+        }
 
-      setAdjustedPosition({ x, y });
+        // 确保不小于 padding
+        x = Math.max(padding, x);
+        y = Math.max(padding, y);
+
+        setAdjustedPosition({ x, y });
+      };
+
+      // 使用 requestAnimationFrame 确保 DOM 已经渲染
+      requestAnimationFrame(calculatePosition);
+    } else {
+      // 关闭时重置位置
+      setAdjustedPosition(null);
     }
   }, [isOpen, position]);
 
-  if (!isOpen) return null;
+  if (!isOpen || !adjustedPosition) return null;
 
   return createPortal(
     <div
@@ -78,7 +96,8 @@ export function ContextMenu({ isOpen, onClose, position, items }: ContextMenuPro
         "van-context-menu",
         "fixed z-[9999] min-w-[160px] rounded-lg bg-white py-1 shadow-lg ring-1 ring-black/5",
         "dark:bg-gray-800 dark:ring-white/10",
-        "animate-in fade-in zoom-in-95 duration-100"
+        // 简单的淡入效果，没有位置动画
+        "animate-in fade-in duration-100"
       )}
       style={{
         left: adjustedPosition.x,

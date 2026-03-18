@@ -16,6 +16,12 @@ axios.interceptors.request.use(
 );
 axios.interceptors.response.use(
     (response) => {
+        // 检查是否有新的 token（自动续期）
+        const newToken = response.headers["x-new-token"];
+        if (newToken) {
+            window.localStorage.setItem("_token", newToken);
+            console.log("[Auth] Token 已自动续期");
+        }
         if (response.data && response.data.success === false) {
             return Promise.reject(new Error(response.data.errorMessage || "Unknown error"));
         }

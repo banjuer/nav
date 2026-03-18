@@ -53,7 +53,9 @@ const DarkSwitch = ({ showGithub }: { showGithub: boolean }) => {
     <div
       className={clsx(
         "fixed right-3 z-[55] flex h-10 w-10 cursor-pointer items-center justify-center rounded-full bg-white/80 shadow-sm backdrop-blur transition-all hover:bg-white hover:shadow-md dark:bg-gray-800/80 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-gray-200",
-        showGithub ? "bottom-14 md:bottom-16" : "bottom-3 md:bottom-5"
+        // 从下到上: GithubLink(bottom-3) -> DarkSwitch -> AddToolButton(最上)
+        // GithubLink 高度约 40px + 间距 12px = 52px -> 使用 56px
+        showGithub ? "bottom-[56px] md:bottom-[72px]" : "bottom-3 md:bottom-5"
       )}
       onClick={handleSwitch}
       title={`当前主题: ${theme}`}

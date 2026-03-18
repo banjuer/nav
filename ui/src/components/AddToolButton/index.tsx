@@ -76,12 +76,13 @@ const AddToolButton = ({ catelogs, onSuccess, showGithub }: AddToolButtonProps) 
   // 计算底部位置
   // 从下到上: GithubLink -> DarkSwitch -> AddToolButton
   // 各按钮高度约 40px，间距 12px
+  // 当前按钮在最上方（离底部最远）
   const bottomPosition = useMemo(() => {
     if (showGithub) {
-      // GithubLink (40px) + 间距(12px) + DarkSwitch (40px) + 间距(12px) = 104px
+      // GithubLink (底部) + 间距(12px) + DarkSwitch (40px) + 间距(12px) = 104px
       return "bottom-[104px] md:bottom-[120px]";
     }
-    // DarkSwitch (40px) + 间距(12px) = 52px -> 使用 56px 增加一些空间
+    // DarkSwitch (底部) + 间距(12px) = 52px -> 使用 56px 增加一些空间
     return "bottom-[56px] md:bottom-[72px]";
   }, [showGithub]);
 
