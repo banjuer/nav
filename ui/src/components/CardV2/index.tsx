@@ -5,6 +5,7 @@ import { ToolLogo } from "../ToolLogo";
 import { Modal } from "../ui/Modal";
 import { Button } from "../ui/Button";
 import { Input } from "../ui/Input";
+import { ComboBox } from "../ui/ComboBox";
 import { Select } from "../ui/Select";
 import { ContextMenu, contextMenuIcons } from "../ui/ContextMenu";
 import { ConfirmDialog } from "../ui/ConfirmDialog";
@@ -26,10 +27,18 @@ interface CardProps {
   onRefresh?: () => void;
 }
 
+// 变量定义接口
+interface VariableDef {
+  name: string;           // 变量名
+  presetValues: string[]; // 预定义值列表
+  hasPreset: boolean;     // 是否有预定义值
+}
+
 const Card = ({ id, title, url, des, logo, catelog, onClick, index, isSearching, catelogs = [], onRefresh }: CardProps) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [variables, setVariables] = useState<Record<string, string>>({});
-  const [variableFields, setVariableFields] = useState<string[]>([]);
+  const [variableDefs, setVariableDefs] = useState<VariableDef[]>([]);
+  const [processedUrl, setProcessedUrl] = useState(url);
   
   const [contextMenuOpen, setContextMenuOpen] = useState(false);
   const [contextMenuPosition, setContextMenuPosition] = useState({ x: 0, y: 0 });
@@ -44,14 +53,67 @@ const Card = ({ id, title, url, des, logo, catelog, onClick, index, isSearching,
 
   const showNumIndex = index < 10 && isSearching;
 
-  const extractVariables = (url: string): string[] => {
+  // 提取变量定义，支持格式：{var} 或 {var=value} 或 {var=value1,value2}
+  const extractVariableDefs = (url: string): { defs: VariableDef[]; cleanUrl: string } => {
     const regex = /\{([^}]+)\}/g;
-    const matches = [];
+    const defs: VariableDef[] = [];
+    let cleanUrl = url;
     let match;
+    
     while ((match = regex.exec(url)) !== null) {
-      matches.push(match[1]);
+      const content = match[1];
+      const equalIndex = content.indexOf('=');
+      
+      let varDef: VariableDef;
+      if (equalIndex > 0) {
+        // 有预定义值: {var=value1,value2}
+        const name = content.substring(0, equalIndex);
+        const valuesStr = content.substring(equalIndex + 1);
+        const presetValues = valuesStr.split(',').filter(v => v.trim() !== '');
+        varDef = {
+          name,
+          presetValues,
+          hasPreset: presetValues.length > 0
+        };
+        // 替换 URL 中的变量为纯变量格式，用于后续替换
+        cleanUrl = cleanUrl.replace(match[0], `{${name}}`);
+      } else {
+        // 无预定义值: {var}
+        varDef = {
+          name: content,
+          presetValues: [],
+          hasPreset: false
+        };
+      }
+      
+      // 避免重复添加同名变量
+      if (!defs.find(d => d.name === varDef.name)) {
+        defs.push(varDef);
+      }
     }
-    return matches;
+    
+    return { defs, cleanUrl };
+  };
+
+  // 更新 URL 中的预定义值（用于保存用户输入的新值）
+  const updateUrlWithNewPresetValue = (originalUrl: string, varName: string, newValue: string): string => {
+    const regex = new RegExp(`\\{${varName}([^}]*)\\}`);
+    return originalUrl.replace(regex, (match) => {
+      const equalIndex = match.indexOf('=');
+      if (equalIndex > 0) {
+        // 有预定义值，检查是否需要追加
+        const valuesStr = match.substring(equalIndex + 1, match.length - 1);
+        const existingValues = valuesStr.split(',').map((v: string) => v.trim()).filter((v: string) => v !== '');
+        
+        // 去重检查
+        if (!existingValues.includes(newValue)) {
+          return `{${varName}=${valuesStr},${newValue}}`;
+        }
+        return match;
+      }
+      // 没有预定义值，不修改
+      return match;
+    });
   };
 
   const handleCardClick = (e: React.MouseEvent<HTMLAnchorElement, MouseEvent>) => {
@@ -61,11 +123,21 @@ const Card = ({ id, title, url, des, logo, catelog, onClick, index, isSearching,
       return;
     }
 
-    const variables = extractVariables(url);
-    if (variables.length > 0) {
+    const { defs, cleanUrl } = extractVariableDefs(url);
+    if (defs.length > 0) {
       e.preventDefault();
-      setVariableFields(variables);
-      setVariables({});
+      setVariableDefs(defs);
+      setProcessedUrl(cleanUrl);
+      
+      // 设置默认值：有预置值时，第一个值为默认值
+      const defaultValues: Record<string, string> = {};
+      defs.forEach(def => {
+        if (def.hasPreset && def.presetValues.length > 0) {
+          defaultValues[def.name] = def.presetValues[0];
+        }
+      });
+      setVariables(defaultValues);
+      
       setIsModalOpen(true);
     } else {
       onClick();
@@ -79,18 +151,54 @@ const Card = ({ id, title, url, des, logo, catelog, onClick, index, isSearching,
     }));
   };
 
-  const handleSubmit = () => {
-    const allFilled = variableFields.every(field => variables[field] !== undefined && variables[field] !== "");
+  const handleSubmit = async () => {
+    const allFilled = variableDefs.every(def => variables[def.name] !== undefined && variables[def.name] !== "");
     if (!allFilled) return;
 
-    let finalUrl = url;
-    variableFields.forEach(field => {
-      finalUrl = finalUrl.replace(new RegExp(`\\{${field}\\}`, "g"), variables[field]);
+    let finalUrl = processedUrl;
+    let updatedOriginalUrl = url;
+    let hasNewValue = false;
+    
+    variableDefs.forEach(def => {
+      const value = variables[def.name];
+      finalUrl = finalUrl.replace(new RegExp(`\\{${def.name}\\}`, "g"), value);
+      
+      // 如果有预定义值且用户输入的值不在预定义列表中，追加到 URL
+      if (def.hasPreset && !def.presetValues.includes(value)) {
+        updatedOriginalUrl = updateUrlWithNewPresetValue(updatedOriginalUrl, def.name, value);
+        hasNewValue = true;
+      }
     });
 
-    window.open(finalUrl, getJumpTarget() === "blank" ? "_blank" : "_self");
+    // 关闭弹窗
     setIsModalOpen(false);
-    onClick();
+    
+    // 打开链接
+    window.open(finalUrl, getJumpTarget() === "blank" ? "_blank" : "_self");
+
+    // 如果有新值需要保存，异步保存（不阻塞用户体验）
+    if (hasNewValue && loggedIn && onRefresh) {
+      try {
+        await fetchUpdateTool({
+          id,
+          name: title,
+          url: updatedOriginalUrl,
+          logo,
+          catelog,
+          desc: des,
+          sort: 0,
+          hide: false,
+        });
+        // 静默刷新数据
+        onRefresh();
+      } catch (e) {
+        console.error("更新 URL 失败:", e);
+      }
+    }
+  };
+
+  const handleEnterKey = () => {
+    handleSubmit();
   };
 
   const handleContextMenu = (e: React.MouseEvent) => {
@@ -102,10 +210,20 @@ const Card = ({ id, title, url, des, logo, catelog, onClick, index, isSearching,
   };
 
   const handleVisit = useCallback(() => {
-    const vars = extractVariables(url);
-    if (vars.length > 0) {
-      setVariableFields(vars);
-      setVariables({});
+    const { defs, cleanUrl } = extractVariableDefs(url);
+    if (defs.length > 0) {
+      setVariableDefs(defs);
+      setProcessedUrl(cleanUrl);
+      
+      // 设置默认值
+      const defaultValues: Record<string, string> = {};
+      defs.forEach(def => {
+        if (def.hasPreset && def.presetValues.length > 0) {
+          defaultValues[def.name] = def.presetValues[0];
+        }
+      });
+      setVariables(defaultValues);
+      
       setIsModalOpen(true);
     } else {
       window.open(url, getJumpTarget() === "blank" ? "_blank" : "_self");
@@ -230,6 +348,7 @@ const Card = ({ id, title, url, des, logo, catelog, onClick, index, isSearching,
         </div>
       </a>
 
+      {/* 变量输入弹窗 */}
       <Modal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
@@ -245,19 +364,36 @@ const Card = ({ id, title, url, des, logo, catelog, onClick, index, isSearching,
           </>
         }
       >
-        <div className="space-y-4">
-          {variableFields.map((variable) => (
-            <div key={variable}>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                {variable}
+        <div className="space-y-3">
+          {variableDefs.map((def) => (
+            <div key={def.name} className="flex items-center gap-3">
+              <label className="w-20 flex-shrink-0 text-sm font-medium text-gray-700 dark:text-gray-300 text-right">
+                {def.name}
               </label>
-              <Input
-                type="text"
-                value={variables[variable] || ""}
-                onChange={(e) => handleVariableChange(variable, e.target.value)}
-                placeholder={`请输入 ${variable}`}
-                className="w-full"
-              />
+              <div className="flex-1">
+                {def.hasPreset ? (
+                  <ComboBox
+                    value={variables[def.name] || ""}
+                    onChange={(value) => handleVariableChange(def.name, value)}
+                    options={def.presetValues.map(v => ({ label: v, value: v }))}
+                    placeholder={`请选择或输入 ${def.name}`}
+                    onEnter={handleEnterKey}
+                  />
+                ) : (
+                  <Input
+                    type="text"
+                    value={variables[def.name] || ""}
+                    onChange={(e) => handleVariableChange(def.name, e.target.value)}
+                    placeholder={`请输入 ${def.name}`}
+                    className="w-full"
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        handleEnterKey();
+                      }
+                    }}
+                  />
+                )}
+              </div>
             </div>
           ))}
         </div>
