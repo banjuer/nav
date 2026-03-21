@@ -1,4 +1,4 @@
-FROM node:24-alpine AS frontendbuilder
+FROM node:20-alpine AS frontendbuilder
 WORKDIR /app
 # 添加缓存失效标记
 ARG CACHE_BUSTER=1
@@ -16,7 +16,7 @@ RUN echo "=== Starting frontend build ===" && \
     echo "=== index.html first 20 lines ===" && \
     head -20 /app/ui/build/index.html
 
-FROM golang:1.25-alpine AS binarybuilder
+FROM golang:1.23-alpine AS binarybuilder
 RUN apk --no-cache --no-progress add git
 WORKDIR /app
 
