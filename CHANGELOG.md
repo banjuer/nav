@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.5.1] - 2026-03-21
+
+### 🐛 Bug Fixes
+
+- **修复 Docker 构建错误**：降低 Node.js 和 Go 版本以提高稳定性
+  - Node.js: 24-alpine → 20-alpine
+  - Go: 1.25-alpine → 1.23-alpine
+  - 解决 exit code 132 错误
+
 ## [1.5.0] - 2026-03-21
 
 ### 🚀 Features
