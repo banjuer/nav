@@ -84,6 +84,7 @@ export const FetchList = async () => {
     })
 
     data.catelogs = catelogs;
+    data.catelogsData = raw.data.catelogs;
     return data;
 };
 

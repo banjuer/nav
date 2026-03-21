@@ -12,6 +12,8 @@ import { ConfirmDialog } from "../ui/ConfirmDialog";
 import { isLogin } from "../../utils/check";
 import { fetchUpdateTool, fetchDeleteTool } from "../../utils/api";
 import { useToast } from "../ui/Toast";
+import { useSortable } from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 
 interface CardProps {
   id: number;
@@ -25,6 +27,7 @@ interface CardProps {
   isSearching: boolean;
   catelogs?: string[];
   onRefresh?: () => void;
+  draggable?: boolean;
 }
 
 // 变量定义接口
@@ -34,7 +37,7 @@ interface VariableDef {
   hasPreset: boolean;     // 是否有预定义值
 }
 
-const Card = ({ id, title, url, des, logo, catelog, onClick, index, isSearching, catelogs = [], onRefresh }: CardProps) => {
+const Card = ({ id, title, url, des, logo, catelog, onClick, index, isSearching, catelogs = [], onRefresh, draggable = false }: CardProps) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [variables, setVariables] = useState<Record<string, string>>({});
   const [variableDefs, setVariableDefs] = useState<VariableDef[]>([]);
@@ -50,6 +53,22 @@ const Card = ({ id, title, url, des, logo, catelog, onClick, index, isSearching,
   
   const { success, error } = useToast();
   const loggedIn = isLogin();
+
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id });
+
+  const sortableStyle = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    zIndex: isDragging ? 50 : "auto",
+    opacity: isDragging ? 0.5 : 1,
+  };
 
   const showNumIndex = index < 10 && isSearching;
 
@@ -313,40 +332,49 @@ const Card = ({ id, title, url, des, logo, catelog, onClick, index, isSearching,
 
   return (
     <>
-      <a
-        href={url === "toggleJumpTarget" ? undefined : url}
-        onClick={handleCardClick}
-        onContextMenu={handleContextMenu}
-        target={getJumpTarget() === "blank" ? "_blank" : "_self"}
-        rel="noreferrer"
-        className={clsx("van-card", styles.container)}
-      >
-        {showNumIndex && (
-          <span className={clsx("van-card-index", styles.index)}>
-            {index + 1}
-          </span>
+      <div
+        ref={setNodeRef}
+        style={sortableStyle}
+        {...(draggable ? { ...attributes, ...listeners } : {})}
+        className={clsx(
+          draggable && "cursor-grab active:cursor-grabbing"
         )}
+      >
+        <a
+          href={url === "toggleJumpTarget" ? undefined : url}
+          onClick={handleCardClick}
+          onContextMenu={handleContextMenu}
+          target={getJumpTarget() === "blank" ? "_blank" : "_self"}
+          rel="noreferrer"
+          className={clsx("van-card", styles.container)}
+        >
+          {showNumIndex && (
+            <span className={clsx("van-card-index", styles.index)}>
+              {index + 1}
+            </span>
+          )}
 
-        <div className={clsx("van-card-icon", styles.iconWrapper)}>
-          <ToolLogo logo={logo} name={title} url={url} className="h-full w-full text-xl" />
-        </div>
-
-        <div className={clsx("van-card-content", styles.content)}>
-          <div className={clsx("van-card-header", styles.header)}>
-            <h3 className={clsx("van-card-title", styles.title)} title={title}>
-              {title}
-            </h3>
-            {catelog && (
-              <span className={clsx("van-card-catelog", styles.catelog)}>
-                {catelog}
-              </span>
-            )}
+          <div className={clsx("van-card-icon", styles.iconWrapper)}>
+            <ToolLogo logo={logo} name={title} url={url} className="h-full w-full text-xl" />
           </div>
-          <p className={clsx("van-card-desc", styles.desc)} title={des}>
-            {des}
-          </p>
-        </div>
-      </a>
+
+          <div className={clsx("van-card-content", styles.content)}>
+            <div className={clsx("van-card-header", styles.header)}>
+              <h3 className={clsx("van-card-title", styles.title)} title={title}>
+                {title}
+              </h3>
+              {catelog && (
+                <span className={clsx("van-card-catelog", styles.catelog)}>
+                  {catelog}
+                </span>
+              )}
+            </div>
+            <p className={clsx("van-card-desc", styles.desc)} title={des}>
+              {des}
+            </p>
+          </div>
+        </a>
+      </div>
 
       {/* 变量输入弹窗 */}
       <Modal

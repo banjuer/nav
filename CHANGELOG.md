@@ -2,6 +2,22 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.5.0] - 2026-03-21
+
+### 🚀 Features
+
+- **拖拽排序功能**：登录后支持拖拽书签和分类进行排序
+  - 书签拖拽：整个书签区域均可拖拽，无需特定拖拽图标
+  - 分类拖拽：水平方向拖拽分类标签排序
+  - 拖拽后自动保存排序并刷新页面
+  - 使用 `@dnd-kit` 实现，支持触控板和鼠标操作
+
+### 🎨 UI/UX Improvements
+
+- 拖拽时显示抓手图标（cursor-grab/grabbing）
+- 拖拽距离阈值设置为 3px，防止误触发
+- 未登录用户不显示拖拽功能，保持原有交互
+
 ## [1.12.1] - 2025-01-17
 
 ### 🚀 Features

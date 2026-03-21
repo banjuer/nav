@@ -5,7 +5,7 @@ import { Loading } from "../Loading";
 import { Helmet } from "react-helmet";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import clsx from "clsx";
-import { FetchList } from "../../utils/api";
+import { FetchList, fetchUpdateToolsSort } from "../../utils/api";
 import TagSelector from "../TagSelector";
 import pinyin from "pinyin-match";
 import GithubLink from "../GithubLink";
@@ -15,6 +15,22 @@ import AddToolButton from "../AddToolButton";
 import { toggleJumpTarget } from "../../utils/setting";
 import LockScreen from "../LockScreen";
 import { InboxIcon } from "@heroicons/react/24/outline";
+import {
+  DndContext,
+  DragEndEvent,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+} from "@dnd-kit/core";
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  rectSortingStrategy,
+} from "@dnd-kit/sortable";
+import { isLogin } from "../../utils/check";
 
 const mutiSearch = (s: string, t: string) => {
   const source = (s || "").toLowerCase();
@@ -31,8 +47,21 @@ const Content = (props: any) => {
   const [searchString, setSearchString] = useState("");
   const [val, setVal] = useState("");
   const [locked, setLocked] = useState(false);
+  const [localFilteredData, setLocalFilteredData] = useState<any[]>([]);
 
   const filteredDataRef = useRef<any>([]);
+  const loggedIn = isLogin();
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 3,
+      },
+    }),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
 
   const showGithub = useMemo(() => {
     const hide = data?.setting?.hideGithub === true
@@ -183,6 +212,7 @@ const Content = (props: any) => {
 
   useEffect(() => {
     filteredDataRef.current = filteredData
+    setLocalFilteredData(filteredData)
   }, [filteredData])
 
   const onKeyEnter = useCallback((ev: KeyboardEvent) => {
@@ -252,8 +282,37 @@ const Content = (props: any) => {
     }
   }, [searchString, onKeyEnter])
 
+  const handleDragEnd = async (event: DragEndEvent) => {
+    const { active, over } = event;
+    
+    if (active.id !== over?.id && over) {
+      const oldIndex = localFilteredData.findIndex((i) => i.id === active.id);
+      const newIndex = localFilteredData.findIndex((i) => i.id === over.id);
+      
+      if (oldIndex !== -1 && newIndex !== -1) {
+        const newData = arrayMove(localFilteredData, oldIndex, newIndex);
+        setLocalFilteredData(newData);
+        filteredDataRef.current = newData;
+
+        if (loggedIn) {
+          const updates = newData.map((item, index) => ({
+            id: item.id,
+            sort: index + 1,
+          }));
+
+          try {
+            await fetchUpdateToolsSort(updates);
+            loadData();
+          } catch (e) {
+            console.error("更新书签排序失败:", e);
+          }
+        }
+      }
+    }
+  };
+
   const renderCardsV2 = () => {
-    return filteredData.map((item, index) => {
+    return localFilteredData.map((item, index) => {
       return (
         <CardV2
           id={item.id}
@@ -267,6 +326,7 @@ const Content = (props: any) => {
           isSearching={searchString.trim() !== ""}
           catelogs={data?.catelogs || []}
           onRefresh={loadData}
+          draggable={loggedIn}
           onClick={() => {
             resetSearch();
             if (item.url === "toggleJumpTarget") {
@@ -308,6 +368,8 @@ const Content = (props: any) => {
             tags={data?.catelogs ?? ["全部工具"]}
             currTag={currTag}
             onTagChange={handleSetCurrTag}
+            catelogsData={data?.catelogsData || []}
+            onRefresh={loadData}
           />
         </div>
       </div>
@@ -316,17 +378,31 @@ const Content = (props: any) => {
       <div className={clsx("van-layout-content", styles.contentContainer)}>
         {loading ? (
           <Loading />
-        ) : filteredData.length > 0 ? (
-          <div className={clsx("van-layout-grid", styles.grid)} style={{ gridTemplateColumns: "repeat(auto-fill, minmax(var(--card-min-width), 1fr))" }}>
-            {renderCardsV2()}
-          </div>
+        ) : localFilteredData.length > 0 ? (
+          loggedIn ? (
+            <DndContext
+              sensors={sensors}
+              collisionDetection={closestCenter}
+              onDragEnd={handleDragEnd}
+            >
+              <SortableContext items={localFilteredData.map(i => i.id)} strategy={rectSortingStrategy}>
+                <div className={clsx("van-layout-grid", styles.grid)} style={{ gridTemplateColumns: "repeat(auto-fill, minmax(var(--card-min-width), 1fr))" }}>
+                  {renderCardsV2()}
+                </div>
+              </SortableContext>
+            </DndContext>
+          ) : (
+            <div className={clsx("van-layout-grid", styles.grid)} style={{ gridTemplateColumns: "repeat(auto-fill, minmax(var(--card-min-width), 1fr))" }}>
+              {renderCardsV2()}
+            </div>
+          )
         ) : (
           <div className="flex flex-col items-center justify-center py-20 text-center animate-in fade-in zoom-in-95 duration-300">
             <InboxIcon className="h-16 w-16 text-gray-300 dark:text-gray-700 mb-4" />
             <p className="text-gray-400 dark:text-gray-500 text-sm">
               {searchString ? (
                 <span>
-                  没有找到与 <span className="font-medium text-gray-500 dark:text-gray-400">“{searchString}”</span> 相关的工具
+                  没有找到与 <span className="font-medium text-gray-500 dark:text-gray-400">"{searchString}"</span> 相关的工具
                 </span>
               ) : (
                 "这里空空如也"
