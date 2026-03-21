@@ -74,16 +74,16 @@ const AddToolButton = ({ catelogs, onSuccess, showGithub }: AddToolButtonProps) 
   }, []);
 
   // 计算底部位置
-  // 从下到上: GithubLink -> DarkSwitch -> AddToolButton
-  // 各按钮高度约 40px，间距 12px
+  // 从下到上: GithubLink -> DarkSwitch -> LoginButton -> AddToolButton(最上)
+  // 各按钮高度约 40px，间距 16px
   // 当前按钮在最上方（离底部最远）
   const bottomPosition = useMemo(() => {
     if (showGithub) {
-      // GithubLink (底部) + 间距(12px) + DarkSwitch (40px) + 间距(12px) = 104px
-      return "bottom-[104px] md:bottom-[120px]";
+      // GithubLink(bottom-3=12px) + 间距(16px) + DarkSwitch(40px) + 间距(16px) + LoginButton(40px) + 间距(16px) = 152px
+      return "bottom-[152px] md:bottom-[168px]";
     }
-    // DarkSwitch (底部) + 间距(12px) = 52px -> 使用 56px 增加一些空间
-    return "bottom-[56px] md:bottom-[72px]";
+    // DarkSwitch(bottom-[56px]=56px) + 间距(16px) + LoginButton(40px) + 间距(16px) = 152px
+    return "bottom-[104px] md:bottom-[120px]";
   }, [showGithub]);
 
   const categoryOptions = useMemo(() => {
