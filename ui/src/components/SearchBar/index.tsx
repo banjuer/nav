@@ -34,8 +34,8 @@ const SearchBar = (props: SearchBarProps) => {
   return (
     <div className="mb-4 w-full md:mb-6">
       <div className="relative">
-        <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
-          <svg className="h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+        <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4">
+          <svg className="h-5 w-5 text-gray-400 dark:text-gray-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
             <path fillRule="evenodd" d="M9 3.5a5.5 5.5 0 100 11 5.5 5.5 0 000-11zM2 9a7 7 0 1112.452 4.391l3.328 3.329a.75.75 0 11-1.06 1.06l-3.329-3.328A7 7 0 012 9z" clipRule="evenodd" />
           </svg>
         </div>
@@ -43,7 +43,7 @@ const SearchBar = (props: SearchBarProps) => {
           ref={inputRef}
           id="search-bar"
           type="search"
-          className="block w-full rounded-md border-0 bg-gray-100 py-3 pl-10 pr-4 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:bg-white focus:ring-2 focus:ring-inset focus:ring-blue-600 dark:bg-gray-800 dark:text-white dark:ring-gray-700 dark:placeholder:text-gray-500 dark:focus:bg-gray-800 sm:text-lg sm:leading-6 transition-all"
+          className="block w-full rounded-2xl border-0 bg-white/90 py-4 pl-12 pr-5 text-gray-900 shadow-[0_2px_8px_rgba(0,0,0,0.06),inset_0_1px_0_rgba(255,255,255,0.8)] placeholder:text-gray-400 ring-1 ring-gray-200/80 backdrop-blur-sm focus:bg-white focus:shadow-[0_4px_16px_rgba(59,130,246,0.15)] focus:ring-2 focus:ring-blue-500/50 dark:bg-gray-800/80 dark:text-white dark:ring-gray-600/60 dark:placeholder:text-gray-500 dark:shadow-[0_2px_8px_rgba(0,0,0,0.2)] dark:focus:bg-gray-800 dark:focus:ring-blue-500/40 sm:text-lg sm:leading-6 transition-all duration-300"
           placeholder="按任意键直接开始搜索..."
           value={props.searchString}
           onChange={(ev) => {

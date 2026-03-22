@@ -436,7 +436,7 @@ const styles = {
   root: "min-h-screen bg-gray-50 pb-20 dark:bg-gray-900",
   header: "sticky top-0 z-30 w-full bg-gray-50/90 py-4 backdrop-blur transition-colors dark:bg-gray-900/90",
   headerContent: "container mx-auto px-4 max-w-7xl",
-  contentContainer: "container mx-auto px-4 max-w-7xl",
+  contentContainer: "container mx-auto px-4 max-w-7xl relative z-40",
   grid: "grid gap-3 sm:gap-4",
   footer: "fixed bottom-2 left-0 right-0 text-center text-xs text-gray-400 dark:text-gray-600",
 };

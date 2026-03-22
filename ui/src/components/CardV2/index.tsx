@@ -529,14 +529,14 @@ const Card = ({ id, title, url, des, logo, catelog, onClick, index, isSearching,
 };
 
 const styles = {
-  container: "group relative flex w-full cursor-pointer flex-col items-center p-4 rounded-xl bg-white shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-lg dark:bg-gray-800 sm:flex-row sm:items-center sm:text-left",
-  index: "absolute right-2 top-2 font-mono text-xs text-gray-300 dark:text-gray-600",
-  iconWrapper: "mb-2 flex h-14 w-14 flex-shrink-0 items-center justify-center rounded-lg bg-gray-50 dark:bg-gray-700 overflow-hidden sm:mb-0 sm:mr-4 sm:h-12 sm:w-12",
+  container: "group relative flex w-full cursor-pointer flex-col items-center p-4 rounded-2xl bg-white shadow-[0_2px_8px_rgba(0,0,0,0.04)] transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_12px_32px_rgba(0,0,0,0.12)] dark:bg-gray-800 dark:shadow-[0_2px_8px_rgba(0,0,0,0.2)] dark:hover:shadow-[0_12px_32px_rgba(0,0,0,0.4)] sm:flex-row sm:items-center sm:text-left before:absolute before:inset-0 before:rounded-2xl before:border before:border-gray-200/60 before:transition-colors hover:before:border-blue-300/60 dark:before:border-gray-600/60 dark:hover:before:border-blue-500/40",
+  index: "absolute right-3 top-3 font-mono text-[10px] font-medium text-gray-300 dark:text-gray-600",
+  iconWrapper: "mb-3 flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-gray-50 to-gray-100 ring-1 ring-gray-200/50 dark:from-gray-700 dark:to-gray-800 dark:ring-gray-600/50 overflow-hidden sm:mb-0 sm:mr-4",
   content: "flex flex-col items-center min-w-0 flex-1 w-full sm:items-start",
-  header: "flex flex-col items-center gap-1 w-full sm:flex-row sm:justify-between sm:w-full",
-  title: "truncate text-sm text-gray-900 dark:text-gray-100 w-full text-center sm:w-auto sm:text-left sm:flex-1",
-  catelog: "hidden sm:block shrink-0 rounded bg-gray-100 px-2 py-0.5 text-[10px] text-gray-500 dark:bg-gray-700 dark:text-gray-400",
-  desc: "hidden sm:line-clamp-3 mt-1 text-xs text-gray-500 dark:text-gray-400 break-all",
+  header: "flex flex-col items-center gap-1.5 w-full sm:flex-row sm:justify-between sm:w-full",
+  title: "truncate text-sm font-semibold text-gray-800 dark:text-gray-100 w-full text-center sm:w-auto sm:text-left sm:flex-1",
+  catelog: "hidden sm:block shrink-0 rounded-full bg-gradient-to-r from-blue-50 to-indigo-50 ring-1 ring-blue-100 px-2.5 py-0.5 text-[10px] font-medium text-blue-600 dark:from-blue-900/30 dark:to-indigo-900/30 dark:ring-blue-800/30 dark:text-blue-300",
+  desc: "hidden sm:line-clamp-3 sm:h-[3.75rem] mt-1.5 text-xs text-gray-500 dark:text-gray-400 leading-relaxed",
 };
 
 export default Card;

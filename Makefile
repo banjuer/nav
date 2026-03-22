@@ -47,6 +47,14 @@ clean:
 	@echo "Cleaning..."
 	@rm -f main
 
+# 一键构建并运行（前端+后端完整重建）
+dev:
+	@echo "Building UI and Go binary..."
+	@cd ui && npm run build
+	@go build -o van-nav .
+	@echo "Starting server..."
+	@./van-nav
+
 # Live Reload
 watch:
 	@if command -v air > /dev/null; then \
