@@ -1,5 +1,10 @@
+// 生成缓存版本号：优先从环境变量获取，否则使用时间戳
+const cacheVersion = process.env.VITE_BUILD_VERSION || 
+                     new Date().toISOString().replace(/[-:T.Z]/g, '').slice(0, 14);
+
 module.exports = {
   globDirectory: "build/",
+  cacheId: 'van-nav-' + cacheVersion,
   globPatterns: [
     "**/*.{json,ico,html,png,txt,css,js}"
   ],
@@ -11,6 +16,8 @@ module.exports = {
   swDest: "build/service-worker.js",
   skipWaiting: true,
   clientsClaim: true,
+  cleanupOutdatedCaches: true,
+  sourcemap: false,
   runtimeCaching: [
     {
       // Cache images with CacheFirst strategy
