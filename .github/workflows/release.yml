@@ -34,14 +34,9 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
       
-      - uses: actions/setup-node@v3
-        with:
-          node-version: "20"
-      
-      - name: Build frontend
-        run: |
-          npm install -g pnpm
-          cd ui && pnpm install --no-frozen-lockfile && pnpm build && cd ..
+      - name: Get version from tag
+        id: version
+        run: echo "VERSION=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
       
       - name: Extract metadata
         id: meta
@@ -66,3 +61,5 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
+          build-args: |
+            VITE_APP_VERSION=${{ steps.version.outputs.VERSION }}

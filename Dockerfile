@@ -2,11 +2,15 @@ FROM node:20-alpine AS frontendbuilder
 WORKDIR /app
 # 添加缓存失效标记
 ARG CACHE_BUSTER=1
+# 接收版本号参数
+ARG VITE_APP_VERSION
+ENV VITE_APP_VERSION=$VITE_APP_VERSION
 COPY . .
 RUN npm install -g pnpm
 
 # 前端构建 - 关键步骤
 RUN echo "=== Starting frontend build ===" && \
+    echo "=== VITE_APP_VERSION: $VITE_APP_VERSION ===" && \
     cd /app/ui && \
     pnpm install --force && \
     CI=false pnpm build && \
