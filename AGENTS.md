@@ -43,3 +43,27 @@ cd ui && npm run dev  # 启动 Vite 开发服务器，热更新
 - `database/` - SQLite 数据库操作
 - `service/` - 业务逻辑
 - `main.go` - 程序入口
+
+## 版本管理 ⚠️
+
+本项目使用 **Git Tag** 作为版本号，后台会自动检查 GitHub Releases 更新。
+
+### 发布新版本流程
+1. 更新代码并提交到 main 分支
+2. 打标签（版本号格式：`v{主版本}.{次版本}.{修订}`，如 `v1.7.2`）：
+   ```bash
+   git tag -a v1.7.2 -m "版本说明"
+   git push origin v1.7.2
+   ```
+3. GitHub Actions 会自动构建并发布 Docker 镜像
+
+### 版本号规则
+- 主版本号：重大功能变更或破坏性更新
+- 次版本号：新增功能或较大改进
+- 修订号：Bug 修复或小的优化
+
+### 技术实现
+- 版本号来源：`git describe --tags`（vite.config.ts 自动获取）
+- 前端显示：`import.meta.env.VITE_APP_VERSION`
+- 更新检查：调用 GitHub API (`repos/banjuer/nav/releases/latest`)
+- 后台位置：左下角固定显示当前版本和更新状态

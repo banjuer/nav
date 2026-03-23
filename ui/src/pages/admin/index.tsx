@@ -12,6 +12,7 @@ import {
 import { useOnce } from '../../utils/useOnce';
 
 import DarkSwitch from '../../components/DarkSwitch';
+import VersionCheck from '../../components/VersionCheck';
 
 const menuItems: MenuItem[] = [
   {
@@ -113,6 +114,11 @@ export const AdminPage = () => {
       {/* Persistent Theme Switch & Github Link */}
       <div className="fixed bottom-4 right-4 z-50 flex gap-4">
         <DarkSwitch showGithub={false} />
+      </div>
+      
+      {/* Version Info */}
+      <div className="fixed bottom-4 left-4 z-50">
+        <VersionCheck />
       </div>
     </div>
   );
