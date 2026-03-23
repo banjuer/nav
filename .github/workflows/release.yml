@@ -41,7 +41,7 @@ jobs:
       - name: Build frontend
         run: |
           npm install -g pnpm
-          cd ui && pnpm install && pnpm build && cd ..
+          cd ui && pnpm install --no-frozen-lockfile && pnpm build && cd ..
       
       - name: Extract metadata
         id: meta
