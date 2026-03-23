@@ -474,11 +474,11 @@ const styles = {
   container: "group relative flex w-full cursor-pointer flex-col items-center p-4 rounded-xl bg-white shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:shadow-md dark:bg-gray-800 sm:flex-row sm:items-center sm:text-left",
   index: "absolute right-2 top-2 font-mono text-xs text-gray-300 dark:text-gray-600",
   iconWrapper: "mb-2 flex h-14 w-14 flex-shrink-0 items-center justify-center rounded-lg bg-gray-50 dark:bg-gray-700 overflow-hidden sm:mb-0 sm:mr-4 sm:h-12 sm:w-12",
-  content: "flex flex-col items-center min-w-0 flex-1 w-full sm:items-start",
+  content: "flex flex-col items-center min-w-0 flex-1 w-full sm:items-start justify-center",
   header: "flex flex-col items-center gap-1 w-full sm:flex-row sm:justify-between sm:w-full",
   title: "truncate text-sm text-gray-900 dark:text-gray-100 w-full text-center sm:w-auto sm:text-left sm:flex-1",
   catelog: "hidden sm:block shrink-0 rounded bg-gray-100 px-2 py-0.5 text-[10px] text-gray-500 dark:bg-gray-700 dark:text-gray-400",
-  desc: "hidden sm:line-clamp-3 mt-1 text-xs text-gray-500 dark:text-gray-400 break-all",
+  desc: "hidden sm:block mt-1 w-full text-xs text-gray-500 dark:text-gray-400 truncate",
 };
 
 export default Card;
