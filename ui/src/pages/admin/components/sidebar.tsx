@@ -121,7 +121,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
           href="https://github.com/banjuer/nav"
           target="_blank"
           rel="noopener noreferrer"
-          className={`absolute bottom-4 flex items-center text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white group ${expanded ? 'left-4' : 'left-1/2 -translate-x-1/2'}`}
+          className="absolute bottom-4 left-4 flex items-center text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white group"
           title="GitHub"
         >
           <svg height="20" width="20" viewBox="0 0 16 16" className="fill-current flex-shrink-0">
