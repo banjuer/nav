@@ -6,9 +6,9 @@ import { Modal } from "../ui/Modal";
 import { Button } from "../ui/Button";
 import { Input } from "../ui/Input";
 import { ComboBox } from "../ui/ComboBox";
-import { Select } from "../ui/Select";
 import { ContextMenu, contextMenuIcons } from "../ui/ContextMenu";
 import { ConfirmDialog } from "../ui/ConfirmDialog";
+import { ToolModal, ToolFormData } from "../ToolModal";
 import { isLogin } from "../../utils/check";
 import { fetchUpdateTool, fetchDeleteTool } from "../../utils/api";
 import { useToast } from "../ui/Toast";
@@ -48,7 +48,15 @@ const Card = ({ id, title, url, des, logo, catelog, onClick, index, isSearching,
   
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
-  const [editFormData, setEditFormData] = useState<any>({});
+  const [editFormData, setEditFormData] = useState<ToolFormData>({
+    name: "",
+    url: "",
+    logo: "",
+    catelog: "",
+    desc: "",
+    sort: 0,
+    hide: false,
+  });
   const [loading, setLoading] = useState(false);
   
   const { success, error } = useToast();
@@ -272,7 +280,7 @@ const Card = ({ id, title, url, des, logo, catelog, onClick, index, isSearching,
     setEditModalOpen(true);
   }, [id, title, url, logo, catelog, des]);
 
-  const handleSaveEdit = async () => {
+  const handleSaveEdit = async (isEdit: boolean) => {
     if (!editFormData.name || !editFormData.url || !editFormData.catelog) {
       error("请填写必要信息 (名称, 网址, 分类)");
       return;
@@ -436,83 +444,17 @@ const Card = ({ id, title, url, des, logo, catelog, onClick, index, isSearching,
         />
       )}
 
-      <Modal
+      <ToolModal
         isOpen={editModalOpen}
         onClose={() => setEditModalOpen(false)}
         title="编辑书签"
-        panelClassName="max-w-xl"
-        footer={
-          <>
-            <Button variant="secondary" onClick={() => setEditModalOpen(false)} disabled={loading}>
-              取消
-            </Button>
-            <Button onClick={handleSaveEdit} isLoading={loading}>
-              确认
-            </Button>
-          </>
-        }
-      >
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="md:col-span-2 flex items-center gap-4">
-            <label className="w-12 flex-shrink-0 text-right text-sm font-medium text-gray-700 dark:text-gray-300">ID</label>
-            <div className="flex-1 min-w-0">
-              <Input value={editFormData.id} disabled className="bg-gray-100" />
-            </div>
-          </div>
-          <div className="md:col-span-2 flex items-center gap-4">
-            <label className="w-12 flex-shrink-0 text-right text-sm font-medium text-gray-700 dark:text-gray-300">名称</label>
-            <div className="flex-1 min-w-0">
-              <Input
-                value={editFormData.name}
-                onChange={e => setEditFormData({ ...editFormData, name: e.target.value })}
-                placeholder="工具名称"
-              />
-            </div>
-          </div>
-          <div className="md:col-span-2 flex items-center gap-4">
-            <label className="w-12 flex-shrink-0 text-right text-sm font-medium text-gray-700 dark:text-gray-300">网址</label>
-            <div className="flex-1 min-w-0">
-              <Input
-                value={editFormData.url}
-                onChange={e => setEditFormData({ ...editFormData, url: e.target.value })}
-                placeholder="https://"
-              />
-            </div>
-          </div>
-          <div className="md:col-span-2 flex items-center gap-4">
-            <label className="w-12 flex-shrink-0 text-right text-sm font-medium text-gray-700 dark:text-gray-300">Logo</label>
-            <div className="flex-1 min-w-0">
-              <Input
-                value={editFormData.logo}
-                onChange={e => setEditFormData({ ...editFormData, logo: e.target.value })}
-                placeholder="Logo URL"
-              />
-            </div>
-          </div>
-          <div className="md:col-span-2 flex items-center gap-4">
-            <label className="w-12 flex-shrink-0 text-right text-sm font-medium text-gray-700 dark:text-gray-300">分类</label>
-            <div className="flex-1 min-w-0">
-              <Select
-                value={editFormData.catelog}
-                options={categoryOptions}
-                onChange={val => setEditFormData({ ...editFormData, catelog: val })}
-                placeholder="选择分类"
-              />
-            </div>
-          </div>
-          <div className="md:col-span-2 flex items-start gap-4">
-            <label className="w-12 flex-shrink-0 text-right text-sm font-medium text-gray-700 dark:text-gray-300 pt-2">描述</label>
-            <div className="flex-1 min-w-0">
-              <Input
-                textarea
-                rows={3}
-                value={editFormData.desc}
-                onChange={e => setEditFormData({ ...editFormData, desc: e.target.value })}
-              />
-            </div>
-          </div>
-        </div>
-      </Modal>
+        isEdit={true}
+        loading={loading}
+        formData={editFormData}
+        setFormData={setEditFormData}
+        onSubmit={handleSaveEdit}
+        categoryOptions={categoryOptions}
+      />
 
       <ConfirmDialog
         isOpen={deleteConfirmOpen}
