@@ -31,7 +31,10 @@ jobs:
           cd ui && CI=false pnpm install && CI=false pnpm build && cd ..
           echo '构建前端数据完成'
           ls ui/build
-          git stash
+      - name: Configure Git
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
       - name: Run GoReleaser
         uses: goreleaser/goreleaser-action@v6
         with:
