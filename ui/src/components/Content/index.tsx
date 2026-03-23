@@ -32,6 +32,7 @@ import {
   rectSortingStrategy,
 } from "@dnd-kit/sortable";
 import { isLogin } from "../../utils/check";
+import { getThemeById } from "../../themes";
 
 const mutiSearch = (s: string, t: string) => {
   const source = (s || "").toLowerCase();
@@ -52,6 +53,72 @@ const Content = (props: any) => {
 
   const filteredDataRef = useRef<any>([]);
   const loggedIn = isLogin();
+
+  // 获取当前主题
+  const currentTheme = useMemo(() => {
+    const themeId = data?.setting?.theme || 'default';
+    return getThemeById(themeId);
+  }, [data?.setting?.theme]);
+
+  // 注入主题自定义 CSS
+  useEffect(() => {
+    const styleId = 'theme-custom-css';
+    let styleEl = document.getElementById(styleId) as HTMLStyleElement;
+    
+    if (!styleEl) {
+      styleEl = document.createElement('style');
+      styleEl.id = styleId;
+      document.head.appendChild(styleEl);
+    }
+    
+    const themeCSS = currentTheme.customCSS || '';
+    const customCSS = data?.setting?.customCSS || '';
+    styleEl.innerHTML = themeCSS + '\n' + customCSS;
+  }, [currentTheme, data?.setting?.customCSS]);
+
+  // 注入主题自定义 JS
+  useEffect(() => {
+    const themeJS = currentTheme.customJS || '';
+    const customJS = data?.setting?.customJS || '';
+    const combinedJS = themeJS + '\n' + customJS;
+    
+    if (combinedJS.trim()) {
+      const scriptId = 'theme-custom-js';
+      let scriptEl = document.getElementById(scriptId) as HTMLScriptElement;
+      
+      if (scriptEl) {
+        scriptEl.remove();
+      }
+      
+      scriptEl = document.createElement('script');
+      scriptEl.id = scriptId;
+      scriptEl.innerHTML = combinedJS;
+      document.body.appendChild(scriptEl);
+    }
+  }, [currentTheme, data?.setting?.customJS]);
+
+  // 根据主题动态生成样式
+  const styles = useMemo(() => {
+    const isMobileApp = currentTheme.styles.layout === 'mobile-app';
+    
+    return {
+      root: isMobileApp 
+        ? "min-h-screen pb-20 dark:bg-gray-900"
+        : "min-h-screen bg-gray-50 pb-20 dark:bg-gray-900",
+      header: isMobileApp
+        ? "sticky top-0 z-50 w-full py-4 backdrop-blur-md transition-colors"
+        : "sticky top-0 z-50 w-full bg-gray-50/95 py-4 backdrop-blur-md transition-colors dark:bg-gray-900/95",
+      headerContent: currentTheme.styles.container || "container mx-auto px-4 max-w-7xl",
+      contentContainer: clsx(
+        currentTheme.styles.container || "container mx-auto px-4 max-w-7xl relative z-10",
+        isMobileApp ? "" : "pt-4"
+      ),
+      grid: isMobileApp 
+        ? "van-layout-grid grid gap-3"
+        : "grid gap-3 sm:gap-4",
+      footer: "fixed bottom-2 left-0 right-0 text-center text-xs text-gray-400 dark:text-gray-600 z-40",
+    };
+  }, [currentTheme]);
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -356,24 +423,26 @@ const Content = (props: any) => {
       </Helmet>
 
       {/* Top Bar - Sticky */}
-      <div className={clsx("van-layout-header", styles.header)}>
-        <div className={clsx("van-layout-header-content", styles.headerContent)}>
-          <SearchBar
-            searchString={val}
-            setSearchText={(t) => {
-              setVal(t);
-              handleSetSearch(t);
-            }}
-          />
-          <TagSelector
-            tags={data?.catelogs ?? ["全部工具"]}
-            currTag={currTag}
-            onTagChange={handleSetCurrTag}
-            catelogsData={data?.catelogsData || []}
-            onRefresh={loadData}
-          />
+      {currentTheme.styles.searchBar?.visible !== false && (
+        <div className={clsx("van-layout-header", styles.header)}>
+          <div className={clsx("van-layout-header-content", styles.headerContent)}>
+            <SearchBar
+              searchString={val}
+              setSearchText={(t) => {
+                setVal(t);
+                handleSetSearch(t);
+              }}
+            />
+            <TagSelector
+              tags={data?.catelogs ?? ["全部工具"]}
+              currTag={currTag}
+              onTagChange={handleSetCurrTag}
+              catelogsData={data?.catelogsData || []}
+              onRefresh={loadData}
+            />
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Content Area */}
       <div className={clsx("van-layout-content", styles.contentContainer)}>
@@ -430,15 +499,6 @@ const Content = (props: any) => {
       />
     </div>
   );
-};
-
-const styles = {
-  root: "min-h-screen bg-gray-50 pb-20 dark:bg-gray-900",
-  header: "sticky top-0 z-50 w-full bg-gray-50/95 py-4 backdrop-blur-md transition-colors dark:bg-gray-900/95",
-  headerContent: "container mx-auto px-4 max-w-7xl",
-  contentContainer: "container mx-auto px-4 max-w-7xl relative z-10 pt-4",
-  grid: "grid gap-3 sm:gap-4",
-  footer: "fixed bottom-2 left-0 right-0 text-center text-xs text-gray-400 dark:text-gray-600 z-40",
 };
 
 export default Content;

@@ -10,7 +10,7 @@ import (
 
 func GetSetting() types.Setting {
 	sql_get_user := `
-		SELECT id,favicon,title,govRecord,logo192,logo512,hideAdmin,hideGithub,jumpTargetBlank,customJS,customCSS,guestPassword
+		SELECT id,favicon,title,govRecord,logo192,logo512,hideAdmin,hideGithub,jumpTargetBlank,customJS,customCSS,guestPassword,theme
 		FROM nav_setting 
 		ORDER BY id ASC 
 		LIMIT 1;
@@ -24,8 +24,9 @@ func GetSetting() types.Setting {
 	var customJS sql.NullString
 	var customCSS sql.NullString
 	var guestPassword sql.NullString
+	var theme sql.NullString
 
-	err := row.Scan(&setting.Id, &setting.Favicon, &setting.Title, &setting.GovRecord, &setting.Logo192, &setting.Logo512, &hideAdmin, &hideGithub, &jumpTargetBlank, &customJS, &customCSS, &guestPassword)
+	err := row.Scan(&setting.Id, &setting.Favicon, &setting.Title, &setting.GovRecord, &setting.Logo192, &setting.Logo512, &hideAdmin, &hideGithub, &jumpTargetBlank, &customJS, &customCSS, &guestPassword, &theme)
 	if err != nil {
 		logger.LogError("获取配置失败: %s", err)
 		return types.Setting{
@@ -82,6 +83,12 @@ func GetSetting() types.Setting {
 		setting.GuestPassword = ""
 	}
 
+	if theme.Valid && theme.String != "" {
+		setting.Theme = theme.String
+	} else {
+		setting.Theme = "default"
+	}
+
 	return setting
 }
 
@@ -116,7 +123,7 @@ func UpdateSetting(data types.Setting) error {
 
 	sql_update_setting := `
 		UPDATE nav_setting
-		SET favicon = ?, title = ?, govRecord = ?, logo192 = ?, logo512 = ?, hideAdmin = ?, hideGithub = ?, jumpTargetBlank = ?, customJS = ?, customCSS = ?, guestPassword = ?
+		SET favicon = ?, title = ?, govRecord = ?, logo192 = ?, logo512 = ?, hideAdmin = ?, hideGithub = ?, jumpTargetBlank = ?, customJS = ?, customCSS = ?, guestPassword = ?, theme = ?
 		WHERE id = (SELECT id FROM nav_setting ORDER BY id ASC LIMIT 1);
 		`
 
@@ -124,7 +131,7 @@ func UpdateSetting(data types.Setting) error {
 	if err != nil {
 		return err
 	}
-	res, err := stmt.Exec(data.Favicon, data.Title, data.GovRecord, data.Logo192, data.Logo512, data.HideAdmin, data.HideGithub, data.JumpTargetBlank, data.CustomJS, data.CustomCSS, newPwd)
+	res, err := stmt.Exec(data.Favicon, data.Title, data.GovRecord, data.Logo192, data.Logo512, data.HideAdmin, data.HideGithub, data.JumpTargetBlank, data.CustomJS, data.CustomCSS, newPwd, data.Theme)
 	if err != nil {
 		return err
 	}

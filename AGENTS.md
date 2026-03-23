@@ -65,5 +65,43 @@ cd ui && npm run dev  # 启动 Vite 开发服务器，热更新
 ### 技术实现
 - 版本号来源：`git describe --tags`（vite.config.ts 自动获取）
 - 前端显示：`import.meta.env.VITE_APP_VERSION`
-- 更新检查：调用 GitHub API (`repos/banjuer/nav/releases/latest`)
+- 更新检测：调用 GitHub API (`repos/banjuer/nav/releases/latest`)
 - 后台位置：左下角固定显示当前版本和更新状态
+
+## 主题管理
+
+### 内置主题
+1. **default** - 默认网格卡片布局
+2. **mobile-app** - 手机APP风格（图标+标题，隐藏搜索框）
+
+### 添加新主题
+1. 在 `ui/src/themes/` 目录下创建新主题文件
+2. 参照 `default.ts` 或 `mobile-app.ts` 实现 ThemeConfig 接口
+3. 在 `ui/src/themes/index.ts` 中注册主题
+
+### 主题配置结构
+```typescript
+interface ThemeConfig {
+  id: string;
+  name: string;
+  description: string;
+  type: 'built-in' | 'custom';
+  styles: {
+    layout: 'default' | 'mobile-app' | 'grid';
+    container?: string;
+    card?: string;
+    searchBar?: {
+      visible: boolean;
+      style: 'default' | 'floating' | 'minimal';
+      position: 'top' | 'center' | 'hidden';
+    };
+  };
+  customCSS?: string;  // 主题自带CSS
+  customJS?: string;   // 主题自带JS
+}
+```
+
+### 主题切换
+- 在后台「系统设置」→「主题管理」中切换
+- 自定义代码（CSS/JS）会与主题代码合并
+- 优先加载主题代码，然后加载自定义代码（可覆盖主题样式）

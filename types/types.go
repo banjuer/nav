@@ -14,6 +14,7 @@ type Setting struct {
 	CustomJS        string `json:"customJS"`
 	CustomCSS       string `json:"customCSS"`
 	GuestPassword   string `json:"guestPassword"`
+	Theme           string `json:"theme"`
 }
 
 type Token struct {

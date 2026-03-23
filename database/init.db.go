@@ -93,6 +93,16 @@ func InitDB() {
 		DB.Exec(`ALTER TABLE nav_setting ADD COLUMN guestPassword TEXT;`)
 	}
 
+	// 设置表表结构升级-20250323-Theme
+	if !columnExists("nav_setting", "theme") {
+		DB.Exec(`ALTER TABLE nav_setting ADD COLUMN theme TEXT DEFAULT 'default';`)
+	}
+
+	// 工具表添加本地图标字段
+	if !columnExists("nav_table", "localLogo") {
+		DB.Exec(`ALTER TABLE nav_table ADD COLUMN localLogo TEXT;`)
+	}
+
 	// 默认 tools 用的 表
 	sql_create_table = `
 		CREATE TABLE IF NOT EXISTS nav_table (
@@ -186,12 +196,12 @@ func InitDB() {
 	utils.CheckErr(err)
 	if !rows.Next() {
 		sql_add_setting := `
-			INSERT INTO nav_setting (favicon, title, govRecord, logo192, logo512, hideAdmin, hideGithub, jumpTargetBlank)
-			VALUES (?, ?, ?, ?, ?, ?, ?, ?);
+			INSERT INTO nav_setting (favicon, title, govRecord, logo192, logo512, hideAdmin, hideGithub, jumpTargetBlank, theme)
+			VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?);
 			`
 		stmt, err := DB.Prepare(sql_add_setting)
 		utils.CheckErr(err)
-		res, err := stmt.Exec("favicon.ico", "Van Nav", "", "logo192.png", "logo512.png", false, false, true)
+		res, err := stmt.Exec("favicon.ico", "Van Nav", "", "logo192.png", "logo512.png", false, false, true, "default")
 		utils.CheckErr(err)
 		_, err = res.LastInsertId()
 		utils.CheckErr(err)

@@ -6,6 +6,7 @@ import { Input } from "../../../components/ui/Input";
 import { Select } from "../../../components/ui/Select";
 import { Switch } from "../../../components/ui/Switch";
 import { Loading } from "../../../components/Loading";
+import ThemeManager from "../../../components/ThemeManager";
 
 import toast from "react-hot-toast";
 
@@ -154,36 +155,27 @@ export const Setting = () => {
           <p className="text-xs text-gray-500 -mt-3">若设置为 "********" 表示密码未变动</p>
         </div>
 
-        <div className="space-y-4 pt-2 border-t border-gray-100 dark:border-gray-700">
-          <div>
-            <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
-              自定义 CSS
-            </label>
-            <textarea
-              rows={4}
-              className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 disabled:cursor-not-allowed disabled:bg-gray-50 dark:bg-gray-800 dark:border-gray-600 dark:text-white sm:text-sm"
-              value={settingData.customCSS || ''}
-              onChange={e => setSettingData({ ...settingData, customCSS: e.target.value })}
-              placeholder="/* 输入自定义 CSS 样式 */"
-            />
-          </div>
-          <div>
-            <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
-              自定义 JavaScript
-            </label>
-            <textarea
-              rows={4}
-              className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 disabled:cursor-not-allowed disabled:bg-gray-50 dark:bg-gray-800 dark:border-gray-600 dark:text-white sm:text-sm"
-              value={settingData.customJS || ''}
-              onChange={e => setSettingData({ ...settingData, customJS: e.target.value })}
-              placeholder="// 输入自定义 JavaScript 代码 (如统计脚本)"
-            />
-          </div>
-        </div>
-
         <div className="pt-4">
           <Button onClick={handleUpdateWebSite} isLoading={requestLoading}>提交修改</Button>
         </div>
+      </div>
+
+      {/* 主题管理 */}
+      <div className="rounded-lg bg-white p-6 shadow-sm dark:bg-gray-800">
+        <h2 className="mb-6 text-lg font-medium text-gray-900 dark:text-white border-b pb-2 border-gray-100 dark:border-gray-700">主题管理</h2>
+        <ThemeManager
+          currentTheme={settingData.theme || 'default'}
+          customCSS={settingData.customCSS || ''}
+          customJS={settingData.customJS || ''}
+          onChange={(theme, customCSS, customJS) => {
+            setSettingData({ 
+              ...settingData, 
+              theme,
+              customCSS,
+              customJS 
+            });
+          }}
+        />
       </div>
     </div>
   );
