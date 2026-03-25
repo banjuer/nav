@@ -67,3 +67,50 @@ cd ui && npm run dev  # 启动 Vite 开发服务器，热更新
 - 前端显示：`import.meta.env.VITE_APP_VERSION`
 - 更新检查：调用 GitHub API (`repos/banjuer/nav/releases/latest`)
 - 后台位置：左下角固定显示当前版本和更新状态
+
+## 跨平台开发注意事项 ⚠️
+
+本项目支持在 Windows、Linux、macOS 上开发，但不同平台的构建和启动命令有差异：
+
+### 可执行文件差异
+
+| 平台 | 编译命令 | 生成的文件 | 启动命令 |
+|------|---------|-----------|---------|
+| **Windows** | `go build -o van-nav.exe .` | `van-nav.exe` | `.\van-nav.exe` |
+| **Linux/macOS** | `go build -o van-nav .` | `van-nav` | `./van-nav` |
+
+### 常见问题
+
+**Windows 下最容易犯的错误：**
+```bash
+# ❌ 错误：编译和启动的文件不一致
+go build -o van-nav .      # 生成的是 "van-nav"（无扩展名）
+.\van-nav.exe              # 执行的却是旧的 "van-nav.exe"！
+
+# ✅ 正确：Windows 必须明确指定 .exe
+go build -o van-nav.exe .
+.\van-nav.exe
+```
+
+### 完整构建流程（跨平台版）
+
+```bash
+# 1. 停止旧进程
+# Windows: taskkill /F /IM van-nav.exe
+# Linux/macOS: pkill van-nav
+
+# 2. 构建前端（所有平台相同）
+cd ui && npm run build
+
+# 3. 编译 Go（根据平台选择）
+# Windows:
+go build -o van-nav.exe .
+# Linux/macOS:
+go build -o van-nav .
+
+# 4. 启动（根据平台选择）
+# Windows:
+.\van-nav.exe
+# Linux/macOS:
+./van-nav
+```
