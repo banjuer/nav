@@ -1,19 +1,30 @@
 FROM node:20-alpine AS frontendbuilder
 WORKDIR /app
+# 添加 git 以支持 vite.config.ts 中的版本获取
+RUN apk add --no-cache git
+
 # 添加缓存失效标记
 ARG CACHE_BUSTER=1
 # 接收版本号参数
 ARG VITE_APP_VERSION
 ENV VITE_APP_VERSION=$VITE_APP_VERSION
+
+# 先复制 package 文件以利用缓存
+COPY ui/package.json ui/pnpm-lock.yaml ./ui/
+
+RUN npm install -g pnpm@9
+
+# 安装依赖（使用 frozen-lockfile 确保一致性）
+RUN cd /app/ui && pnpm install --frozen-lockfile
+
+# 复制源代码（排除已复制的 node_modules）
 COPY . .
-RUN npm install -g pnpm
 
 # 前端构建 - 关键步骤
 RUN echo "=== Starting frontend build ===" && \
     echo "=== VITE_APP_VERSION: $VITE_APP_VERSION ===" && \
     cd /app/ui && \
-    pnpm install --force && \
-    CI=false pnpm build && \
+    CI=false pnpm build 2>&1 && \
     cd .. && \
     echo "=== Frontend build completed ===" && \
     ls -la /app/ui/build/ && \
