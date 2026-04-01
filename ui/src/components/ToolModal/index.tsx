@@ -117,7 +117,7 @@ export const ToolModal = ({
         setFormData((prev) => ({ ...prev, logo: googleUrl }));
       }
     } else if (val === "upload") {
-      setFormData((prev) => ({ ...prev, logo: "" }));
+      // 保持当前logo值，不要重置为""，避免触发useEffect重新计算logoMode
     }
   };
 
