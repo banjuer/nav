@@ -19,11 +19,13 @@ import { InboxIcon } from "@heroicons/react/24/outline";
 import {
   DndContext,
   DragEndEvent,
+  DragStartEvent,
   closestCenter,
   KeyboardSensor,
   PointerSensor,
   useSensor,
   useSensors,
+  DragOverlay,
 } from "@dnd-kit/core";
 import {
   arrayMove,
@@ -49,6 +51,7 @@ const Content = (props: any) => {
   const [val, setVal] = useState("");
   const [locked, setLocked] = useState(false);
   const [localFilteredData, setLocalFilteredData] = useState<any[]>([]);
+  const [activeId, setActiveId] = useState<number | null>(null);
 
   const filteredDataRef = useRef<any>([]);
   const loggedIn = isLogin();
@@ -283,7 +286,12 @@ const Content = (props: any) => {
     }
   }, [searchString, onKeyEnter])
 
+  const handleDragStart = (event: DragStartEvent) => {
+    setActiveId(event.active.id as number);
+  };
+
   const handleDragEnd = async (event: DragEndEvent) => {
+    setActiveId(null);
     const { active, over } = event;
     
     if (active.id !== over?.id && over) {
@@ -384,6 +392,7 @@ const Content = (props: any) => {
             <DndContext
               sensors={sensors}
               collisionDetection={closestCenter}
+              onDragStart={handleDragStart}
               onDragEnd={handleDragEnd}
             >
               <SortableContext items={localFilteredData.map(i => i.id)} strategy={rectSortingStrategy}>
@@ -391,6 +400,31 @@ const Content = (props: any) => {
                   {renderCardsV2()}
                 </div>
               </SortableContext>
+              <DragOverlay>
+                {activeId ? (
+                  (() => {
+                    const item = localFilteredData.find(i => i.id === activeId);
+                    if (!item) return null;
+                    return (
+                      <CardV2
+                        id={item.id}
+                        title={item.name}
+                        url={item.url}
+                        des={item.desc}
+                        logo={item.logo}
+                        catelog={item.catelog}
+                        index={0}
+                        isSearching={false}
+                        catelogs={data?.catelogs || []}
+                        onRefresh={loadData}
+                        draggable={false}
+                        isOverlay
+                        onClick={() => {}}
+                      />
+                    );
+                  })()
+                ) : null}
+              </DragOverlay>
             </DndContext>
           ) : (
             <div className={clsx("van-layout-grid", styles.grid)} style={{ gridTemplateColumns: "repeat(auto-fill, minmax(var(--card-min-width), 1fr))" }}>

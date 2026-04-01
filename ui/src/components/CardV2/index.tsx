@@ -28,6 +28,7 @@ interface CardProps {
   catelogs?: string[];
   onRefresh?: () => void;
   draggable?: boolean;
+  isOverlay?: boolean;
 }
 
 // 变量定义接口
@@ -37,7 +38,7 @@ interface VariableDef {
   hasPreset: boolean;     // 是否有预定义值
 }
 
-const Card = ({ id, title, url, des, logo, catelog, onClick, index, isSearching, catelogs = [], onRefresh, draggable = false }: CardProps) => {
+const Card = ({ id, title, url, des, logo, catelog, onClick, index, isSearching, catelogs = [], onRefresh, draggable = false, isOverlay = false }: CardProps) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [variables, setVariables] = useState<Record<string, string>>({});
   const [variableDefs, setVariableDefs] = useState<VariableDef[]>([]);
@@ -62,6 +63,8 @@ const Card = ({ id, title, url, des, logo, catelog, onClick, index, isSearching,
   const { success, error } = useToast();
   const loggedIn = isLogin();
 
+  const sortable = useSortable({ id, disabled: isOverlay });
+
   const {
     attributes,
     listeners,
@@ -69,9 +72,16 @@ const Card = ({ id, title, url, des, logo, catelog, onClick, index, isSearching,
     transform,
     transition,
     isDragging,
-  } = useSortable({ id });
+  } = isOverlay ? {
+    attributes: {},
+    listeners: {},
+    setNodeRef: undefined,
+    transform: null,
+    transition: undefined,
+    isDragging: false,
+  } : sortable;
 
-  const sortableStyle = {
+  const sortableStyle = isOverlay ? {} : {
     transform: CSS.Transform.toString(transform),
     transition,
     zIndex: isDragging ? 50 : "auto",
