@@ -258,7 +258,7 @@ const AddToolButton = ({ catelogs, onSuccess, showGithub }: AddToolButtonProps) 
                 <span className="text-xs text-gray-500">预览:</span>
                 {formData.logo ? (
                   <img
-                    src={(formData.logo.startsWith("data:") || formData.logo.startsWith("http")) ? formData.logo : `/api/img?url=${encodeURIComponent(formData.logo)}`}
+                    src={(formData.logo && (formData.logo.startsWith("data:") || formData.logo.startsWith("http"))) ? formData.logo : (formData.logo ? `/api/img?url=${encodeURIComponent(formData.logo)}` : "")
                     alt="Preview"
                     className="h-8 w-8 rounded object-contain border bg-white"
                     onError={(e) => { }}

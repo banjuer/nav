@@ -82,7 +82,7 @@ export const ToolModal = ({
         setTempUrl(formData.logo);
       }
     }
-  }, [isOpen, formData.logo]);
+  }, [isOpen]);
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];

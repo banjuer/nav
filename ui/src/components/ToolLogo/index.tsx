@@ -10,7 +10,7 @@ interface ToolLogoProps {
 }
 
 export const getLogoSrc = (logo: string) => {
-    if (!logo) return "";
+    if (!logo || logo === "undefined") return "";
     if (logo.startsWith("data:") || logo.startsWith("http") || logo.startsWith("//")) return logo;
     return `/api/img?url=${encodeURIComponent(logo)}`;
 };
