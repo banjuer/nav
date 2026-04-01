@@ -15,7 +15,7 @@ export const getLogoSrc = (logo: string) => {
     return `/api/img?url=${encodeURIComponent(logo)}`;
 };
 
-export const ToolLogo = ({ logo, name, className, url, timeout = 2000 }: ToolLogoProps) => {
+export const ToolLogo = ({ logo, name, className, url, timeout = 5000 }: ToolLogoProps) => {
     const [imgError, setImgError] = useState(false);
     const loadedRef = useRef(false);
 
@@ -55,7 +55,8 @@ export const ToolLogo = ({ logo, name, className, url, timeout = 2000 }: ToolLog
 
         const timer = setTimeout(() => {
             if (!loadedRef.current) {
-                setImgError(true);
+                // 超时后不立即设置错误，而是继续等待图片加载
+                // 只有在图片真正加载失败时才显示默认logo
             }
         }, timeout);
 
