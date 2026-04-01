@@ -1,4 +1,4 @@
-FROM node:20-alpine AS frontendbuilder
+FROM --platform=$BUILDPLATFORM node:20-alpine AS frontendbuilder
 WORKDIR /app
 # 添加缓存失效标记
 ARG CACHE_BUSTER=1
