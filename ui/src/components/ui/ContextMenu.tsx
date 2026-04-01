@@ -20,6 +20,7 @@ interface ContextMenuProps {
 export function ContextMenu({ isOpen, onClose, position, items }: ContextMenuProps) {
   const menuRef = useRef<HTMLDivElement>(null);
   const [adjustedPosition, setAdjustedPosition] = useState<{ x: number; y: number } | null>(null);
+  const [isMeasured, setIsMeasured] = useState(false);
 
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
@@ -45,13 +46,20 @@ export function ContextMenu({ isOpen, onClose, position, items }: ContextMenuPro
     };
   }, [isOpen, onClose]);
 
+  // 重置测量状态
   useEffect(() => {
     if (isOpen) {
-      // 计算调整后的位置，确保菜单不超出视口
+      setIsMeasured(false);
+      setAdjustedPosition(null);
+    }
+  }, [isOpen, position]);
+
+  useEffect(() => {
+    if (isOpen && !isMeasured) {
       const calculatePosition = () => {
         if (!menuRef.current) {
-          // 如果 ref 还没准备好，使用传入的位置
-          setAdjustedPosition(position);
+          // 如果 ref 还没准备好，等待下一帧
+          requestAnimationFrame(calculatePosition);
           return;
         }
 
@@ -67,7 +75,7 @@ export function ContextMenu({ isOpen, onClose, position, items }: ContextMenuPro
           x = window.innerWidth - rect.width - padding;
         }
 
-        // 垂直边界检查
+        // 垂直边界检查 - 如果超出底部，向上翻转显示
         if (y + rect.height + padding > window.innerHeight) {
           y = window.innerHeight - rect.height - padding;
         }
@@ -77,17 +85,15 @@ export function ContextMenu({ isOpen, onClose, position, items }: ContextMenuPro
         y = Math.max(padding, y);
 
         setAdjustedPosition({ x, y });
+        setIsMeasured(true);
       };
 
       // 使用 requestAnimationFrame 确保 DOM 已经渲染
       requestAnimationFrame(calculatePosition);
-    } else {
-      // 关闭时重置位置
-      setAdjustedPosition(null);
     }
-  }, [isOpen, position]);
+  }, [isOpen, position, isMeasured]);
 
-  if (!isOpen || !adjustedPosition) return null;
+  if (!isOpen) return null;
 
   return createPortal(
     <div
@@ -100,8 +106,9 @@ export function ContextMenu({ isOpen, onClose, position, items }: ContextMenuPro
         "animate-in fade-in duration-100"
       )}
       style={{
-        left: adjustedPosition.x,
-        top: adjustedPosition.y,
+        left: adjustedPosition?.x ?? position.x,
+        top: adjustedPosition?.y ?? position.y,
+        visibility: isMeasured ? 'visible' : 'hidden',
       }}
     >
       {items.map((item, index) => (
