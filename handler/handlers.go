@@ -213,6 +213,13 @@ func GetAllHandler(c *gin.Context) {
 		catelogs = utils.FilterHideCates(catelogs)
 	}
 
+	// Token 自动续期：如果用户已登录且 token 剩余时间小于 1 天，则续期
+	rawToken := c.Request.Header.Get("Authorization")
+	if newToken, refreshed := utils.RefreshTokenIfNeeded(rawToken); refreshed {
+		c.Header("X-New-Token", newToken)
+		logger.LogInfo("首页 Token 自动续期成功")
+	}
+
 	c.JSON(200, gin.H{
 		"success": true,
 		"data": gin.H{

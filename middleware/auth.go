@@ -2,13 +2,11 @@ package middleware
 
 import (
 	"net/http"
-	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt"
 	"github.com/mereith/nav/database"
 	"github.com/mereith/nav/logger"
-	"github.com/mereith/nav/types"
 	"github.com/mereith/nav/utils"
 )
 
@@ -48,21 +46,9 @@ func JWTMiddleware() gin.HandlerFunc {
 			c.Set("uid", claims["id"])
 
 			// Token 自动续期：如果剩余时间小于 1 天，则续期
-			if exp, ok := claims["exp"].(float64); ok {
-				expTime := time.Unix(int64(exp), 0)
-				now := time.Now()
-				// 如果剩余时间小于 1 天，自动续期
-				if expTime.Sub(now) < time.Hour*24 {
-					newToken, err := utils.SignJWT(types.User{
-						Name: claims["name"].(string),
-						Id:   int(claims["id"].(float64)),
-					})
-					if err == nil {
-						// 在响应头中返回新 token
-						c.Header("X-New-Token", newToken)
-						logger.LogInfo("Token 自动续期成功，用户: %s", claims["name"])
-					}
-				}
+			if newToken, refreshed := utils.RefreshTokenIfNeeded(rawToken); refreshed {
+				c.Header("X-New-Token", newToken)
+				logger.LogInfo("Token 自动续期成功，用户: %s", claims["name"])
 			}
 
 			c.Next()

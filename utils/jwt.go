@@ -66,3 +66,40 @@ func IsLogin(c *gin.Context) bool {
 	token, err := ParseJWT(rawToken)
 	return err == nil && token.Valid
 }
+
+// RefreshTokenIfNeeded 检查 token 是否需要续期（剩余时间小于 1 天）
+// 如果需要续期，返回新 token 和 true；否则返回空字符串和 false
+func RefreshTokenIfNeeded(tokenString string) (string, bool) {
+	token, err := ParseJWT(tokenString)
+	if err != nil || !token.Valid {
+		return "", false
+	}
+
+	claims, ok := token.Claims.(jwt.MapClaims)
+	if !ok {
+		return "", false
+	}
+
+	exp, ok := claims["exp"].(float64)
+	if !ok {
+		return "", false
+	}
+
+	expTime := time.Unix(int64(exp), 0)
+	now := time.Now()
+
+	// 如果剩余时间小于 1 天，自动续期
+	if expTime.Sub(now) < time.Hour*24 {
+		name, _ := claims["name"].(string)
+		id, _ := claims["id"].(float64)
+		newToken, err := SignJWT(types.User{
+			Name: name,
+			Id:   int(id),
+		})
+		if err == nil {
+			return newToken, true
+		}
+	}
+
+	return "", false
+}
