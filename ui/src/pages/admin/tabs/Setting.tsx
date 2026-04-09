@@ -6,6 +6,7 @@ import { Input } from "../../../components/ui/Input";
 import { Select } from "../../../components/ui/Select";
 import { Switch } from "../../../components/ui/Switch";
 import { Loading } from "../../../components/Loading";
+import { ToolLogo } from "../../../components/ToolLogo";
 
 import toast from "react-hot-toast";
 
@@ -14,10 +15,42 @@ export const Setting = () => {
   const [userData, setUserData] = useState<any>({});
   const [settingData, setSettingData] = useState<any>({});
   const [requestLoading, setRequestLoading] = useState(false);
+  const [logoMode, setLogoMode] = useState<"url" | "upload">("url");
+  const [tempUrl, setTempUrl] = useState("");
+  const [logo192Mode, setLogo192Mode] = useState<"url" | "upload">("url");
+  const [tempLogo192Url, setTempLogo192Url] = useState("");
+  const [logo512Mode, setLogo512Mode] = useState<"url" | "upload">("url");
+  const [tempLogo512Url, setTempLogo512Url] = useState("");
 
   useEffect(() => {
     if (store?.user) setUserData(store.user);
-    if (store?.setting) setSettingData(store.setting);
+    if (store?.setting) {
+      setSettingData(store.setting);
+      // 初始化logo模式
+      if (store.setting.favicon?.startsWith("data:")) {
+        setLogoMode("upload");
+        setTempUrl("");
+      } else {
+        setLogoMode("url");
+        setTempUrl(store.setting.favicon || "");
+      }
+      // 初始化logo192模式
+      if (store.setting.logo192?.startsWith("data:")) {
+        setLogo192Mode("upload");
+        setTempLogo192Url("");
+      } else {
+        setLogo192Mode("url");
+        setTempLogo192Url(store.setting.logo192 || "");
+      }
+      // 初始化logo512模式
+      if (store.setting.logo512?.startsWith("data:")) {
+        setLogo512Mode("upload");
+        setTempLogo512Url("");
+      } else {
+        setLogo512Mode("url");
+        setTempLogo512Url(store.setting.logo512 || "");
+      }
+    }
   }, [store])
 
   const handleUpdateUser = useCallback(
@@ -39,6 +72,52 @@ export const Setting = () => {
     },
     [userData, store, reload]
   );
+
+  const handleFileUpload = (field: "favicon" | "logo192" | "logo512") => (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (file.size > 100 * 1024) {
+      toast.error("文件大小不能超过 100KB");
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = (result) => {
+      setSettingData({ ...settingData, [field]: result.target?.result as string });
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleManualUrlChange = (field: "favicon" | "logo192" | "logo512") => (val: string) => {
+    if (field === "favicon") {
+      setTempUrl(val);
+    } else if (field === "logo192") {
+      setTempLogo192Url(val);
+    } else if (field === "logo512") {
+      setTempLogo512Url(val);
+    }
+    setSettingData({ ...settingData, [field]: val });
+  };
+
+  const handleLogoModeChange = (modeField: "logoMode" | "logo192Mode" | "logo512Mode", urlField: "favicon" | "logo192" | "logo512", tempUrlField: string) => (val: any) => {
+    if (modeField === "logoMode") {
+      setLogoMode(val);
+      if (val === "url") {
+        setSettingData((prev: any) => ({ ...prev, [urlField]: tempUrl }));
+      }
+    } else if (modeField === "logo192Mode") {
+      setLogo192Mode(val);
+      if (val === "url") {
+        setSettingData((prev: any) => ({ ...prev, [urlField]: tempLogo192Url }));
+      }
+    } else if (modeField === "logo512Mode") {
+      setLogo512Mode(val);
+      if (val === "url") {
+        setSettingData((prev: any) => ({ ...prev, [urlField]: tempLogo512Url }));
+      }
+    }
+  };
 
   const handleUpdateWebSite = useCallback(
     async () => {
@@ -84,12 +163,59 @@ export const Setting = () => {
       <div className="rounded-lg bg-white p-6 shadow-sm dark:bg-gray-800">
         <h2 className="mb-6 text-lg font-medium text-gray-900 dark:text-white border-b pb-2 border-gray-100 dark:border-gray-700">修改网站信息</h2>
         <div className="space-y-5 max-w-2xl">
-          <Input
-            label="网站 logo"
-            value={settingData.favicon || ''}
-            onChange={e => setSettingData({ ...settingData, favicon: e.target.value })}
-            placeholder="输入 logo 的 url，仅支持 png 或 svg 格式"
-          />
+          <div className="space-y-2">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+              网站 logo
+            </label>
+            <div className="space-y-2">
+              <Select
+                value={logoMode}
+                options={[
+                  { label: "手动输入 URL", value: "url" },
+                  { label: "上传图片", value: "upload" },
+                ]}
+                onChange={handleLogoModeChange("logoMode", "favicon", "tempUrl")}
+              />
+
+              {logoMode === "url" && (
+                <Input
+                  value={tempUrl}
+                  onChange={e => handleManualUrlChange("favicon")(e.target.value)}
+                  placeholder="https://example.com/logo.png"
+                />
+              )}
+
+              {logoMode === "upload" && (
+                <div className="flex items-center gap-2">
+                  <label className="cursor-pointer bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md px-3 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-600">
+                    <span>选择文件</span>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={handleFileUpload("favicon")}
+                    />
+                  </label>
+                  <span className="text-xs text-gray-500">最大 100KB</span>
+                </div>
+              )}
+
+              <div className="flex items-center gap-2 mt-1">
+                <span className="text-xs text-gray-500">预览:</span>
+                {settingData.favicon ? (
+                  <div className="h-8 w-8 rounded border bg-white overflow-hidden">
+                    <ToolLogo
+                      logo={settingData.favicon}
+                      name={settingData.title || "网站"}
+                      className="h-full w-full"
+                    />
+                  </div>
+                ) : (
+                  <span className="text-xs text-gray-400">暂无</span>
+                )}
+              </div>
+            </div>
+          </div>
           <Input
             label="网站标题"
             value={settingData.title || ''}
@@ -115,18 +241,112 @@ export const Setting = () => {
             <p className="mt-1 text-sm text-gray-500">选择点击卡片后默认的跳转方式</p>
           </div>
 
-          <Input
-            label="logo 192x192"
-            value={settingData.logo192 || ''}
-            onChange={e => setSettingData({ ...settingData, logo192: e.target.value })}
-            placeholder="用于 PWA 应用图标"
-          />
-          <Input
-            label="logo 512x512"
-            value={settingData.logo512 || ''}
-            onChange={e => setSettingData({ ...settingData, logo512: e.target.value })}
-            placeholder="用于 PWA 应用图标"
-          />
+          <div className="space-y-2">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+              logo 192x192
+            </label>
+            <div className="space-y-2">
+              <Select
+                value={logo192Mode}
+                options={[
+                  { label: "手动输入 URL", value: "url" },
+                  { label: "上传图片", value: "upload" },
+                ]}
+                onChange={handleLogoModeChange("logo192Mode", "logo192", "tempLogo192Url")}
+              />
+
+              {logo192Mode === "url" && (
+                <Input
+                  value={tempLogo192Url}
+                  onChange={e => handleManualUrlChange("logo192")(e.target.value)}
+                  placeholder="https://example.com/logo192.png"
+                />
+              )}
+
+              {logo192Mode === "upload" && (
+                <div className="flex items-center gap-2">
+                  <label className="cursor-pointer bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md px-3 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-600">
+                    <span>选择文件</span>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={handleFileUpload("logo192")}
+                    />
+                  </label>
+                  <span className="text-xs text-gray-500">最大 100KB</span>
+                </div>
+              )}
+
+              <div className="flex items-center gap-2 mt-1">
+                <span className="text-xs text-gray-500">预览:</span>
+                {settingData.logo192 ? (
+                  <div className="h-8 w-8 rounded border bg-white overflow-hidden">
+                    <ToolLogo
+                      logo={settingData.logo192}
+                      name={settingData.title || "网站"}
+                      className="h-full w-full"
+                    />
+                  </div>
+                ) : (
+                  <span className="text-xs text-gray-400">暂无</span>
+                )}
+              </div>
+            </div>
+          </div>
+          <div className="space-y-2">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+              logo 512x512
+            </label>
+            <div className="space-y-2">
+              <Select
+                value={logo512Mode}
+                options={[
+                  { label: "手动输入 URL", value: "url" },
+                  { label: "上传图片", value: "upload" },
+                ]}
+                onChange={handleLogoModeChange("logo512Mode", "logo512", "tempLogo512Url")}
+              />
+
+              {logo512Mode === "url" && (
+                <Input
+                  value={tempLogo512Url}
+                  onChange={e => handleManualUrlChange("logo512")(e.target.value)}
+                  placeholder="https://example.com/logo512.png"
+                />
+              )}
+
+              {logo512Mode === "upload" && (
+                <div className="flex items-center gap-2">
+                  <label className="cursor-pointer bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md px-3 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-600">
+                    <span>选择文件</span>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={handleFileUpload("logo512")}
+                    />
+                  </label>
+                  <span className="text-xs text-gray-500">最大 100KB</span>
+                </div>
+              )}
+
+              <div className="flex items-center gap-2 mt-1">
+                <span className="text-xs text-gray-500">预览:</span>
+                {settingData.logo512 ? (
+                  <div className="h-8 w-8 rounded border bg-white overflow-hidden">
+                    <ToolLogo
+                      logo={settingData.logo512}
+                      name={settingData.title || "网站"}
+                      className="h-full w-full"
+                    />
+                  </div>
+                ) : (
+                  <span className="text-xs text-gray-400">暂无</span>
+                )}
+              </div>
+            </div>
+          </div>
 
           <div className="flex items-center justify-between py-2">
             <div>

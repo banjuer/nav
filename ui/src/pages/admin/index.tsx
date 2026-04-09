@@ -10,6 +10,8 @@ import {
   TableIcon,
 } from '@radix-ui/react-icons';
 import { useOnce } from '../../utils/useOnce';
+import { FetchList } from '../../utils/api';
+import { Helmet } from 'react-helmet';
 
 import DarkSwitch from '../../components/DarkSwitch';
 
@@ -44,11 +46,27 @@ export const AdminPage = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const [currentKey, setCurrentKey] = useState('tools');
+  const [settingData, setSettingData] = useState<any>({});
 
   useOnce(() => {
     if (!localStorage.getItem('_token')) {
       navigate('/login');
     }
+  }, []);
+
+  // Fetch setting data to set favicon
+  useEffect(() => {
+    const fetchSetting = async () => {
+      try {
+        const data = await FetchList();
+        if (data.setting) {
+          setSettingData(data.setting);
+        }
+      } catch (e) {
+        console.error('Failed to fetch setting data:', e);
+      }
+    };
+    fetchSetting();
   }, []);
 
   // 根据当前路径设置选中的菜单项
@@ -70,6 +88,14 @@ export const AdminPage = () => {
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors duration-200">
+      <Helmet>
+        <meta charSet="utf-8" />
+        <link
+          rel="icon"
+          href={settingData?.favicon ?? "favicon.ico"}
+        />
+        <title>{settingData?.title ?? "Van Nav"} - 管理后台</title>
+      </Helmet>
       {/* Header */}
       <header className="bg-white border-b border-gray-200 dark:bg-gray-800 dark:border-gray-700">
         <div className="w-full mx-auto px-4 sm:px-6 lg:px-8">
