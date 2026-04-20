@@ -10,6 +10,41 @@ import (
 	"github.com/mereith/nav/utils"
 )
 
+func SilentTokenRefreshMiddleware() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		rawToken := c.Request.Header.Get("Authorization")
+		if rawToken == "" {
+			c.Next()
+			return
+		}
+
+		if database.HasApiToken(rawToken) {
+			c.Set("username", "apiToken")
+			c.Set("uid", 1)
+			c.Next()
+			return
+		}
+
+		token, err := utils.ParseJWT(rawToken)
+		if err != nil || !token.Valid {
+			c.Next()
+			return
+		}
+
+		if claims, ok := token.Claims.(jwt.MapClaims); ok {
+			c.Set("username", claims["name"])
+			c.Set("uid", claims["id"])
+
+			if newToken, refreshed := utils.RefreshTokenIfNeeded(rawToken); refreshed {
+				c.Header("X-New-Token", newToken)
+				logger.LogInfo("Token 静默续期成功，用户: %s", claims["name"])
+			}
+		}
+
+		c.Next()
+	}
+}
+
 // 定义一个 JWT 的中间件, 除了校验 jtw，还要校验之前签发的 api token 只要一样就放行。
 func JWTMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {

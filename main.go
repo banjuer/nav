@@ -82,6 +82,7 @@ func main() {
 	router.GET("/manifest.json", handler.ManifastHanlder)
 	router.Use(Serve("/", BinaryFileSystem(fs, "ui/build")))
 	api := router.Group("/api")
+	api.Use(middleware.SilentTokenRefreshMiddleware())
 	{
 		// 获取数据的路由
 		api.GET("/", handler.GetAllHandler)
